@@ -54,9 +54,12 @@ function handleSelection_H(startX,startY,endX,endY)
 	canvas2_H.width+=20;
 	canvas2_H.height+=20;
 	
+	HORIZONTAL_SPACING += 5;
+	VERTICAL_SPACING += 5;
+	
 	redrawChart_H();
 	
-	centerScrollbar("omw_scrollpane",canvas_H);
+	centerScrollbar("omw_scrollpane_H",canvas_H);
  }
  
  function handleZoomOut_H()
@@ -69,8 +72,11 @@ function handleSelection_H(startX,startY,endX,endY)
 	canvas2_H.width-=20;
 	canvas2_H.height-=20;
 	
+	HORIZONTAL_SPACING -= 5;
+	VERTICAL_SPACING -= 5;
+	
 	redrawChart_H();
 	
-	centerScrollbar("omw_scrollpane",canvas_H);
+	centerScrollbar("omw_scrollpane_H",canvas_H);
  }
  

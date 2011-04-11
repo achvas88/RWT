@@ -26,7 +26,7 @@
 	}
 	
 	
-	#omw_scrollpane2
+	#omw_scrollpane_H
 	{
 		width:80%;
 		height:43%;
@@ -64,6 +64,7 @@
   
 <script language="javascript" type="text/javascript" src="jquery-1.5.js"></script> 
 <script language="javascript" type="text/javascript" src="degreeBasedRadialSortGraph.js"></script> 
+<script language="javascript" type="text/javascript" src="hierarchialGraph.js"></script>
 <script language="javascript" type="text/javascript" src="expandableContent.js"></script>
 <script language="javascript" type="text/javascript" src="dragresize/dragresize.js"></script>
 <script language="javascript" type="text/javascript" src="flot/jquery.js"></script> 
@@ -212,8 +213,12 @@ var adjacencyList = new Array();
 <script>
 
  var userDefinedHighlightSelectedNodesExists = true;
+ var userDefinedHighlightSelectedNodesExists = false;
+ 
  var OFFSETX = 0;
  var OFFSETY = -1 * document.height * 0.1;
+ var OFFSETX_H = 0;
+ var OFFSETY_H = -1 * document.height * 0.56;
  var contentCountThresholdValue = 1500;
   
  var canvas2;
@@ -239,7 +244,6 @@ var adjacencyList = new Array();
  {
  	var scrollbar = document.getElementById("omw_scrollpane");
 	
-	var ctx = canvas2.getContext("2d");
 	endX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
 	endY = OFFSETY + scrollbar.scrollTop + evt.clientY;
 	isDown = false;
@@ -691,7 +695,7 @@ function createMenu()
 	listMenu = new FSMenu('listMenu', true, 'display', 'block', 'none');
 	listMenu.animations[listMenu.animations.length] = FSMenu.animFade;
 	//listMenu.animations[listMenu.animations.length] = FSMenu.animSwipeDown;
-	//listMenu.animations[listMenu.animations.length] = FSMenu.animClipDown;
+	listMenu.animations[listMenu.animations.length] = FSMenu.animClipDown;
 	listMenu.showOnClick = 1;
 	
 	if (document.createElement && document.documentElement)
@@ -708,12 +712,90 @@ function init()
 	createTheGraphContents();
 	//initializeChart();
 	populateSelectBox();
-	createMenu();
+	//createMenu();
 	canvas2 = document.getElementById("MyCanvas2");
 	canvas2.addEventListener("mousedown", handleMouseDown);
 	canvas2.addEventListener("mouseup", handleMouseUp);
 	canvas2.addEventListener("mousemove", handleMouseMove);
 }
+
+
+ var canvas2_H;
+ var isDown_H = false;
+ var startX_H,startY_H,endX_H,endY_H;
+ 
+function createTheGraphContents_H()
+ {
+	var canvasID = "myCanvass";
+	var selectionCanvasID = "MyCanvass2";
+	var theDebuggingTextAreaID = "debugTA";
+	
+	var theElements = [{"name":"root","description":"none"},{"name":"a","description":"one"},{"name":"b","description":"two"},{"name":"c","description":"three"},{"name":"d","description":"four"},{"name":"e","description":"five"},{"name":"f","description":"six"},{"name":"g","description":"seven"}];
+	var children = [[1,2],[3,4],[3,6],[5],[5,7],[],[7],[]];
+		
+	drawTheChart_H(canvasID,selectionCanvasID,theElements,children,theDebuggingTextAreaID);
+	displayDebugInformation_H();
+}
+
+ function handleMouseDown_H(evt)
+ {
+	//unHighlightAllChildren_H();
+	
+	if(!evt.ctrlKey)
+	{
+		handleDeselection_H();	
+	}
+	
+	var scrollbar = document.getElementById("omw_scrollpane_H");
+	
+	isDown_H = true;
+	startX_H = OFFSETX_H + scrollbar.scrollLeft + evt.clientX;
+	startY_H = OFFSETY_H + scrollbar.scrollTop + evt.clientY;
+ }
+ 
+ function handleMouseUp_H(evt)
+ {
+ 	var scrollbar = document.getElementById("omw_scrollpane_H");
+	
+	endX_H = OFFSETX_H + scrollbar.scrollLeft + evt.clientX;
+	endY_H = OFFSETY_H + scrollbar.scrollTop + evt.clientY;
+	isDown_H = false;
+	handleSelection_H(startX_H,startY_H,endX_H,endY_H);
+ }
+ 
+
+ function handleMouseMove_H(evt)
+ {	
+	var scrollbar = document.getElementById("omw_scrollpane_H");
+	
+ 	var ctx = canvas2_H.getContext("2d");
+	ctx.clearRect(0,0,canvas2_H.width,canvas2_H.height);
+		
+	if(isDown_H)
+	{
+		ctx.strokeStyle = "rgba(50,50,50,0.4)";
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(startX_H,startY_H);
+		ctx.lineTo(OFFSETX_H + scrollbar.scrollLeft + evt.clientX,startY_H);
+		ctx.lineTo(OFFSETX_H + scrollbar.scrollLeft + evt.clientX,OFFSETY_H + scrollbar.scrollTop +evt.clientY);
+		ctx.lineTo(startX_H,OFFSETY_H + scrollbar.scrollTop +evt.clientY);
+		ctx.closePath();
+		ctx.stroke();
+	}
+		
+ }
+ 
+function init_H()
+{
+	createTheGraphContents_H();
+
+	canvas2_H = document.getElementById("MyCanvass2");
+	canvas2_H.addEventListener("mousedown", handleMouseDown_H);
+	canvas2_H.addEventListener("mouseup", handleMouseUp_H);
+	canvas2_H.addEventListener("mousemove", handleMouseMove_H);
+}
+
 
 function viewDetails()
 {
@@ -842,12 +924,12 @@ var stID;
 
 function populateSelectBox()
 {
-	stID = setInterval("addOption('allList')",0);
+	//stID = setInterval("addOption('allList')",0);
 	
-	/*for(var i=0;i<theElements.length + 1;i++)
+	for(var i=0;i<theElements.length + 1;i++)
 	{
 		addOption('allList');
-	}*/
+	}
 	
 }
 
@@ -1070,7 +1152,7 @@ function fullscreen1()
 		var new_height;
 		var scrollpanel = document.getElementById("omw_scrollpane");
 
-		var otherscrollpanel = document.getElementById('omw_scrollpane2')
+		var otherscrollpanel = document.getElementById('omw_scrollpane_H')
 		var button = document.getElementById('fullScreen');
 		var otherZoomIn = document.getElementById('zoomin_H');
 		var otherZoomOut = document.getElementById('zoomout_H');
@@ -1107,7 +1189,7 @@ function fullscreen2()
 {
 		var new_height;
 		var new_ypos;
-		var scrollpanel = document.getElementById("omw_scrollpane2");
+		var scrollpanel = document.getElementById("omw_scrollpane_H");
 
 		var otherscrollpanel = document.getElementById('omw_scrollpane')
 		var button = document.getElementById('fullScreen2_H');
@@ -1126,6 +1208,7 @@ function fullscreen2()
 			otherZoomOut.style.display = "block";
 			otherFullScreen.style.display = "block";
 			otherLevel.style.display = "block";
+			OFFSETY_H = -1 * document.height * 0.56;
 		}
 		else 
 		{
@@ -1136,6 +1219,7 @@ function fullscreen2()
 			otherZoomOut.style.display = "none";
 			otherFullScreen.style.display = "none";
 			otherLevel.style.display = "none";
+			OFFSETY_H = -1 * document.height * 0.1;
 		}
 
 		zoomed2 = !zoomed2;
@@ -1213,7 +1297,7 @@ function viewChart() {
 	</center>
 </div-->		
 
-<body onload="init()">
+<body onload="init();init_H();">
 
 	
 	
@@ -1275,16 +1359,16 @@ function viewChart() {
 		
 		<div>
 		
-			<div id="omw_scrollpane2">
-				<canvas id="MyCanvass2" width="1000px" height="1000px"  style="z-index: 3; position:absolute; left:0px; top:0px;"></canvas>	    
-				<canvas id="MyCanvass1" width="1000px" height="1000px"  style="z-index: 2; position:absolute; left:0px; top:0px;"></canvas>	    
-				<canvas id="myCanvass" width="1000px" height="1000px"   style="z-index: 1; position:absolute; left:0px; top:0px;">ur browser doesnt support canvas element.. do something!Now!</canvas>
+			<div id="omw_scrollpane_H">
+				<canvas id="MyCanvass2" width="1000px" height="1000px"  style="z-index: 7; position:absolute; left:0px; top:0px;"></canvas>	    
+				<canvas id="MyCanvass1" width="1000px" height="1000px"  style="z-index: 6; position:absolute; left:0px; top:0px;"></canvas>	    
+				<canvas id="myCanvass" width="1000px" height="1000px"   style="z-index: 5; position:absolute; left:0px; top:0px;">ur browser doesnt support canvas element.. do something!Now!</canvas>
 			</div>
 			
 			<div id="zoom_panel2">
-				<button type="submit" id="zoomin_H"     style="z-index: 4;position:absolute;top:10px;left:10px;height:30px;"><img src = "zoom_in.png" width = "20px" height = "20px"></button>
-				<button type="submit" id="zoomout_H"    style="z-index: 4;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
-				<button type="submit" id="fullScreen2_H" style="z-index: 4;position:absolute;top:10px;left:90px;height:30px;" onclick="fullscreen2();"><img src="fullscreen.png" width = "20px" height = "20px" ></button>
+				<button type="submit" id="zoomin_H"     style="z-index: 8;position:absolute;top:10px;left:10px;height:30px;"><img src = "zoom_in.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="zoomout_H"    style="z-index: 8;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="fullScreen2_H" style="z-index: 8;position:absolute;top:10px;left:90px;height:30px;" onclick="fullscreen2();"><img src="fullscreen.png" width = "20px" height = "20px" ></button>
 				
 				<div id = "level2" style="z-index: 2;position:absolute;top:50px;left:10px;width:100px;background:white">Gene Ontology</div>
 			</div>
@@ -1385,7 +1469,7 @@ function viewChart() {
 				<textarea id="debugTA" cols="30" rows="5" name="debugTA"></textarea>
 			</div>
 		</div>
-		
+		<script language="javascript">toggle(getObject('details_link'), 'details');</script>
 		
 		
 		<div style="border: 1px solid #000; padding: 0px; background: #EEEEEE; ">

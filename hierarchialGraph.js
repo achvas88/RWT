@@ -13,8 +13,8 @@
  ///////////// Datastructure /////////////////////////////////////////////////////////////////////
 
  var LEVELS_IN_OCT_TREE_H = 5; // has to be a minimum of 2 
- var HORIZONTAL_SPACING = 100;
- var VERTICAL_SPACING = 100;
+ var HORIZONTAL_SPACING = 50;
+ var VERTICAL_SPACING = 50;
  var RADIUS_OF_CIRCLES_H;
  var octTreeRegions_H = new Array();
  var octTreeCounter_H = 0;
@@ -75,7 +75,7 @@
 	elements_H = theElements;
 	childrenList_H = theChildren;
 	debuggingTextAreaID_H = theDebuggingTextAreaID;
-	RADIUS_OF_CIRCLES_H = (0.00003*canvas_H.width*canvas_H.height);
+	RADIUS_OF_CIRCLES_H = Math.min((0.00001*canvas.width*canvas.height),10);
 	
 	
 	drawChart_H();
@@ -96,7 +96,7 @@
  function redrawChart_H()
  {
 	octTreeRegions_H = [];
-	RADIUS_OF_CIRCLES_H = (0.00003*canvas_H.width*canvas_H.height);
+	RADIUS_OF_CIRCLES_H = Math.min((0.00001*canvas.width*canvas.height),10);
 		
 	maxWidth = calculateMaxCanvasWidth(RADIUS_OF_CIRCLES_H,HORIZONTAL_SPACING);
 	canvas_H.width = Math.max(maxWidth,canvas_H.width); 
@@ -303,8 +303,8 @@ function handleMouseClick_H(evt) {
 		var val3 = pix[i+2]; // blue
 	}
 	
-	var locr = document.getElementById('col');
-	locr.value = val1 + ":" +val2 +":" +val3; 
+	//var locr = document.getElementById('col');
+	//locr.value = val1 + ":" +val2 +":" +val3; 
 	
 	if((val1 == 51 && val2 == 255 && val3 == 0) || (val1 == 255 && val2 == 0 && val3 == 0))
 	{
