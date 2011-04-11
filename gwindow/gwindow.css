@@ -1,0 +1,38 @@
+/* 
+ * GWindow
+ * DHTML Dockable Window Class, v0.2
+ * 
+ * (c) 2006, Serkan Girgin
+ * 
+ * Details and latest version at:
+ * http://www.cografiveri.com/gwindow
+ * 
+ * This script is distributed under the GNU Lesser General Public License.
+ * Read the entire license text here: http://www.gnu.org/licenses/lgpl.html   
+ 
+ * background:url('images/gradient.png') repeat-x;
+ * background-color:#06F;
+ */ 
+   
+.gbutton {
+	border:solid #000;
+}
+.gwindow {
+	border:solid #000;
+	background:#FFF;
+}
+.gwindow_statusbar {
+	color:#000;
+	font:normal 11px verdana;
+	background-color:#FFF;
+	border:solid #000;	
+}
+.gwindow_resize {
+	border:solid #000;
+}
+.gwindow_titlebar {
+	color:white;	
+	font:bold 11px verdana;
+	background-color:#AA0000;
+	border:solid #333;
+}

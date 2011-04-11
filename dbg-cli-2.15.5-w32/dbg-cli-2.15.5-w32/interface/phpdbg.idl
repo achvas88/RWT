@@ -1,0 +1,530 @@
+/***************************************************************************
+                           PHPDBG.IDL  -  description
+                           -------------------
+    begin                : Fri Mar 2 2001
+    copyright            : (C) 2001, 2002 by Dmitri Dmitrienko
+    email                : dd@cron.ru
+    www                  : http://dd.cron.ru
+    license              : This source file is subject to version 1.00 of 
+                           the License,  that is bundled with this package 
+                           in the file LICENSE, and is available at through 
+                           the world-wide-web at http://dd.cron.ru/license
+ ***************************************************************************/
+
+// PHPDBG.idl : IDL source for PHPDBGPS.dll proxy/stub dll
+// 
+
+// This file will be processed by the MIDL tool to
+// produce the type library (PHPDBG.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+#ifdef MAKTLB 
+[
+	uuid(FAB27283-9D20-11D4-BB79-C5E0247B842E),
+	version(2.0),
+	helpstring("PHPDBG 2.0 Type Library")
+]
+library PHPDbgLib
+{
+#endif
+
+cpp_quote("#ifndef _DBGBASE_INTF_H_")
+cpp_quote("#define _DBGBASE_INTF_H_")
+
+#include "dbgbase/dbgbase_intf.h"
+
+cpp_quote("#endif")
+
+cpp_quote(     "const GUID CATID_PHPDBG = {0x5FB17280, 0x9D56, 0x11D4, {0xBB, 0x79, 0xC5, 0xE0, 0x24, 0x7B, 0x84, 0x2E}};")
+cpp_quote(     "")
+
+interface IPhpDbgDocRequestor;
+interface IPhpDbgStackRequestor;
+interface IPhpDbgExpressionRequestor;
+interface IPhpDbgBreakpointRequestor;
+interface IPhpDbgProfRequestor;
+
+interface IPhpDbgLineInfoEnum;
+interface IPhpDbgCtxInfoEnum;
+interface IPhpDbgProfDataEnum;
+
+
+interface IPhpDbgRequestor;
+interface IPhpDbgRequestor2;
+interface IPhpDbgRequestor3;
+
+interface IPhpDbgSite;
+interface IPhpDbgSite2;
+
+interface IEnumStringTable;
+
+// Listener for JIT debugging
+interface IDbgListener;
+
+
+
+typedef struct tagSESSREQUEST {
+	SERVER_TYPE	server_type;
+	long	timeoutms_waitsess;
+	long	timeoutms_client;
+	long	port;
+	BSTR	address;
+	long	SOF_flags;
+	BSTR	request;
+	IEnumStringTable *headers;
+	BSTR	cgi_handler;
+} SESSREQUEST;
+
+typedef struct tagBPOINTITEM {
+	BPSTATE	bps;
+	long	line_no;
+	long	mod_no;
+} BPOINTITEM;
+
+typedef struct tagDSRCNODE {
+	long	op_type;
+	BSTR	constant;
+	long	var;
+	long	opline_num;
+	long	fetch_type;
+	long	op_array_ctx_id;
+	long	EA_var;
+	long	EA_type;
+} DSRCNODE;
+
+
+//------------------------------------------------------------------------------------------------
+//
+// D E F I N I T I O N S
+//
+//
+	[
+		object,
+		uuid(9419B6A2-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgSite Interface (deprecated, use IPhpDbgSite2 instead)"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgSite : IUnknown
+	{		
+		HRESULT IsAlive();
+		[helpstring("Deprecated, Initialize2 should be used")]
+		HRESULT Initialize(
+			[in] LONG parentwnd,
+			[in] IPhpDbgRequestor *requestor);
+		HRESULT Close();
+		[helpstring("Deprecated")]
+		HRESULT SetName(
+			[in] BSTR ApplicationName);
+		HRESULT HandleBreakPoint(
+			[in] BR_REASON reason, 
+			[out] BP_ACTION *action);
+		HRESULT HandleError(
+			[in] LONG errtype,
+			[in] BSTR message,
+			[out] BP_ACTION *action);
+	};
+
+	[
+		object,
+		uuid(9419B6A3-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgRequestor : IUnknown
+	{
+		HRESULT IsAlive();
+		HRESULT GetDocRequestor(
+			[out] IPhpDbgDocRequestor** req);
+		HRESULT GetStackRequestor(
+			[out] IPhpDbgStackRequestor** req);
+		HRESULT GetExpressionRequestor(
+			[out] IPhpDbgExpressionRequestor **req);
+		[helpstring("Deprecated,  SetBreakPoint3 should be used")]
+		HRESULT SetBreakPoint(
+			[in] BPOINTITEM const bpm);
+		HRESULT OnSessionClosed();
+	}
+
+	[
+		object,
+		uuid(9419B6A4-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgDocRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgDocRequestor : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT RequestDocSrc(
+			[in] LONG mod_no, 
+			[out] BSTR *mod_name,
+			[out] BSTR *src);
+		HRESULT RequestDocParent(
+			[in] LONG mod_no, 
+			[out] LONG *parent_mod_no);
+		HRESULT RequestDocFileName(
+			[in] LONG mod_no, 
+			[out] BSTR *mod_name);
+	};
+
+	[
+		object,
+		uuid(9419B6A5-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgStackRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgStackRequestor : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] LONG *line_no,
+			[out] LONG *mod_no, 
+			[out] LONG *scope_id,
+			[out] BOOL *fFinal,
+			[out] BSTR *descr);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+	[
+		object,
+		uuid(9419B6A6-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgExpressionRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgExpressionRequestor : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Evaluate(
+			[in] BSTR expr,
+			[in] LONG scope_id,
+			[out] BSTR *serial_str);
+		HRESULT Evaluate2(
+			[in] BSTR expr,
+			[in] LONG scope_id,
+			[out] BSTR *serial_str,
+			[out] BSTR *err_str);
+	};
+
+
+
+
+
+//////////////// V E R S I O N   2   I N T E R F A C E S  ////////////////////////////
+
+	[
+		object,
+		uuid(9419B6A7-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgSite2 Interface"),
+		version(2.0),
+		pointer_default(unique)
+	]
+	interface IPhpDbgSite2 : IPhpDbgSite
+	{		
+		HRESULT GetVersion(
+			[out] LONG *ver,
+			[out] BSTR *descr);
+		HRESULT Initialize2(
+			[in] IPhpDbgRequestor2 *requestor,
+			[in] LONG ver,
+			[in] BSTR descr);
+		HRESULT Log(
+			[in] LONG mod_no, 
+			[in] LONG line_no, 
+			[in] BSTR mod_name, 
+			[in] LONG LT_type, 
+			[in] BSTR logmsg);
+	};
+
+	[
+		object,
+		uuid(9419B6A8-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgRequestor2 Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgRequestor2 : IPhpDbgRequestor
+	{
+		HRESULT GetVersion(
+			[out] LONG *ver,
+			[out] BSTR *descr);
+		[helpstring("Deprecated,  SetBreakPoint3 should be used")]
+		HRESULT SetBreakPoint2(
+			[in] BPOINTITEM const bpm,
+			[in] BSTR mod_name);
+		HRESULT GetBreakpointRequestor(
+			[out] IPhpDbgBreakpointRequestor **req);
+		HRESULT GetLineInfoEnum(
+			[in] LONG mod_no, 
+			[out] IPhpDbgLineInfoEnum **req);
+		HRESULT GetCtxInfoEnum(
+			[in] LONG mod_no, 
+			[out] IPhpDbgCtxInfoEnum **req);
+		HRESULT GetProfRequestor(
+			[out] IPhpDbgProfRequestor **req);
+		HRESULT SetSessionOptions(
+			[in] LONG opt_flags);
+		HRESULT SetBreakPoint3(
+			[in] LONG line_no,
+			[in] LONG mod_no,
+			[in] BSTR mod_name,
+			[in] BSTR condition,
+			[in] LONG skiphits,
+			[in] BOOL istemp,
+			[out] LONG *bp_no);
+		HRESULT GetBreakPoint( 
+			[in] LONG bp_no,
+			[out] LONG *line_no,
+			[out] LONG *mod_no,
+			[out] BSTR *mod_name,
+			[out] BSTR *condition,
+			[out] BOOL *istemp,
+			[out] LONG *skiphits,
+			[out] LONG *hitcount,
+			[out] BPSTATE *state,
+			[out] BOOL *isunderhit);
+		HRESULT UpdateBreakPoint( 
+			[in] LONG bp_no,
+			[in] LONG line_no,
+			[in] BSTR condition,
+			[in] LONG skiphits,
+			[in] BPSTATE state);
+		HRESULT DeleteBreakPoint( 
+			[in] LONG bp_no);
+        }
+
+	[
+		object,
+		uuid(9419B6A9-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgBreakpointRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgBreakpointRequestor : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] LONG *line_no,
+			[out] LONG *mod_no,
+			[out] BSTR *mod_name,
+			[out] BPSTATE *state,
+			[out] BOOL *fFinal);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+	[
+		object,
+		uuid(9419B6AA-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgLineInfoEnum Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgLineInfoEnum : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] LONG *mod_no,
+			[out] LONG *start_line_no,
+			[out] LONG *lines_count, 
+			[out] LONG *ctx_id,
+			[out] BOOL *fFinal);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+	[
+		object,
+		uuid(9419B6AB-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgCtxInfoEnum Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgCtxInfoEnum : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] LONG *mod_no,
+			[out] LONG *ctx_id,
+			[out] BSTR *function_name,
+			[out] BOOL *fFinal);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+
+	[
+		object,
+		uuid(9419B6AC-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgProfRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgProfRequestor : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT GetProfFreq(
+			[out] __int64 *perffreq, 
+			[out] LONG *perfaccuracy);
+		HRESULT GetProfDataEnum(
+			[in] LONG mod_no, 
+			[out] IPhpDbgProfDataEnum **req);
+	};
+
+	[
+		object,
+		uuid(9419B6AD-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgProfDataEnum Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgProfDataEnum : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] LONG *mod_no,
+			[out] LONG *line_no,
+			[out] LONG *hit_count,
+			[out] __int64 *tm_min,
+			[out] __int64 *tm_max,
+			[out] __int64 *tm_sum,
+			[out] BOOL *fFinal);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+	[
+		object,
+		uuid(9419B6AE-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IEnumStringTable Interface"),
+		pointer_default(unique)
+	]
+	interface IEnumStringTable : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] BSTR *key,
+			[out] BSTR *value,
+			[out] BOOL *fFinal);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+	[
+		object,
+		uuid(9419B6AF-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgBreakpointRequestor Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgBreakpointRequestor2 : IPhpDbgBreakpointRequestor
+	{		
+		HRESULT Next2(
+			[out] LONG *bp_no,
+			[out] LONG *line_no,
+			[out] LONG *mod_no,
+			[out] BSTR *mod_name,
+			[out] BSTR *condition,
+			[out] BOOL *istemp,
+			[out] LONG *skiphits,
+
+			[out] LONG *hitcount,
+			[out] BPSTATE *state,
+			[out] BOOL *isunderhit,
+			[out] BOOL *fFinal);
+	};
+
+
+	[
+		object,
+		uuid(9419B6B0-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgDSrcEnum Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgDSrcEnum : IUnknown
+	{		
+		HRESULT IsAlive();
+		HRESULT Next(
+			[out] LONG *ctx_id,
+			[out] LONG *idx,
+			[out] LONG *opcode,
+			[out] DSRCNODE *result,
+			[out] DSRCNODE *op1,
+			[out] DSRCNODE *op2,
+			[out] LONG *extended_value,
+			[out] LONG *lineno,
+			[out] BOOL *fFinal);
+		HRESULT Skip();
+		HRESULT Reset();
+	};
+
+	[
+		object,
+		uuid(9419B6B1-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IPhpDbgRequestor3 Interface"),
+		pointer_default(unique)
+	]
+	interface IPhpDbgRequestor3 : IPhpDbgRequestor2
+	{
+		HRESULT GetDSrcEnum(
+			[in] LONG ctx_id,
+			[out] IPhpDbgDSrcEnum** req);
+	};
+
+// L I S T E N E R   F O R   J I T   D E B U G G I N G
+
+	[
+		object,
+		uuid(9419B6C2-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IDbgListener Interface"),
+		version(2.0),
+		pointer_default(unique)
+	]
+	interface IDbgListener : IUnknown
+	{
+		HRESULT GetVersion(
+			[out] LONG *ver,
+			[out] BSTR *descr);
+		HRESULT Start(
+			[in]  LONG port,
+			[in]  BSTR address,
+			[in]  GUID CLSID_IDE,
+			[in]  LONG SOF_flags);
+		HRESULT Stop(
+			[in]  BOOL stopclients);
+		HRESULT Restart(
+			[in]  LONG port,
+			[in]  BSTR address,
+			[in]  GUID CLSID_IDE,
+			[in]  LONG SOF_flags);
+		HRESULT GetStatus(
+			[out] ListenerStatus *LSTNRS_status);
+                HRESULT Log(
+                        [in]  ListenerLogKind kind,
+                        [in]  BSTR message);
+	};
+
+	[
+		object,
+		uuid(9419B6C3-9D73-11D4-BB79-B0BBF3DE2E23),
+		helpstring("IDbgListener2 Interface"),
+		version(2.1),
+		pointer_default(unique)
+	]
+	interface IDbgListener2 : IDbgListener
+	{
+		HRESULT StartSession( 
+			[in]  SESSREQUEST  req,
+			[in]  IPhpDbgSite2 *site,
+			[out] DBGS_RESULT  *result);
+	}
+
+
+#ifndef MAKTLB 
+[
+	uuid(FAB27283-9D20-11D4-BB79-C5E0247B842E),
+	version(1.0),
+	helpstring("PHPDBG 2.0 Type Library")
+]
+library PHPDbgLib
+{
+#endif
+
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+};

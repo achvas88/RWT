@@ -1,0 +1,12 @@
+This archive contains debugger modules for php versions from 4.3.0 up to 4.4.6 and from
+5.0.3 up to 5.2.1
+All the files names end up with php version number they are compatible with.
+All modules are optimized for Pentium Pro and higher CPUs.
+
+See installation instructions at 
+http://support.nusphere.com/viewtopic.php?t=576
+
+PLEASE NOTE This is a freeware version (2.15) of the debugger
+and may not support all the features supported by commercial 
+version (2.14, 2.16, 2.18 or higher). In particular, it does not support IP security.
+

@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <title>FreeStyle Menus Demonstration</title>
+
+
+ <!-- FreeStyle Menu v1.0RC by Angus Turnbull http://www.twinhelix.com -->
+ <script type="text/javascript" src="fsmenu.js"></script>
+
+ <!-- Demo CSS layouts for the list menu. Pick your favourite one and customise! -->
+ <!-- Remove all but one and change "alternate stylesheet" to "stylesheet" to enable -->
+
+ <link rel="stylesheet" type="text/css" id="listmenu-h"
+  href="listmenu_h.css" title="Horizontal 'Earth'" />
+ 
+
+ <!-- Fallback CSS menu file allows list menu operation when JS is disabled. -->
+ <!-- This is automatically disabled via its ID when the script kicks in. -->
+ <link rel="stylesheet" type="text/css" id="fsmenu-fallback"
+  href="listmenu_fallback.css" />
+
+ <!-- Alternatively, this CSS file is for the second div-based demo menu. -->
+ <link rel="stylesheet" type="text/css" href="divmenu.css" />
+
+</head>
+
+<body>
+
+<ul class="menulist" id="listMenuRoot">
+ <li><a href="#">Home</a></li>
+ <li>
+  <a href="#">Demo Submenu</a>
+  <ul>
+   <li><a href="#">Here's a submenu item.</a></li>
+   <li><a href="#">Items auto-size based on the text they contain.</a></li>
+  </ul>
+ </li>
+ <li>
+  <a href="#">Submenu #2</a>
+  <ul>
+   <li>
+    <a href="#">Nested menu 1</a>
+    <ul>
+     <li><a href="#">As many levels as you need.</a></li>
+     <li><a href="#">All styled via CSS.</a></li>
+    </ul>
+   </li>
+   <li>
+    <a href="#">Nested menu 2</a>
+    <ul>
+     <li><a href="#">Another nested menu.</a></li>
+     <li><a href="#">It's still built with nested lists.</a></li>
+    </ul>
+   </li>
+   <li><a href="#">These menus have true 'switch' timers.</a></li>
+   <li><a href="#">Imprecision doesn't mean collapse!</a></li>
+  </ul>
+ </li>
+ <li><a href="#">Easy to use!</a></li>
+</ul>
+
+
+<script type="text/javascript">
+
+var listMenu = new FSMenu('listMenu', true, 'display', 'block', 'none');
+listMenu.animations[listMenu.animations.length] = FSMenu.animFade;
+listMenu.animations[listMenu.animations.length] = FSMenu.animSwipeDown;
+var arrow = null;
+if (document.createElement && document.documentElement)
+{
+ arrow = document.createElement('span');
+ arrow.appendChild(document.createTextNode('>'));
+ arrow.className = 'subind';
+}
+addReadyEvent(new Function('listMenu.activateMenu("listMenuRoot", arrow)'));
+</script>
+
+<!-- ***** END OF EXAMPLE 1: LIST MENU ***** -->
+
+
+</body>
+</html>
