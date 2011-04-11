@@ -213,7 +213,7 @@ var adjacencyList = new Array();
 <script>
 
  var userDefinedHighlightSelectedNodesExists = true;
- var userDefinedHighlightSelectedNodesExists = false;
+ var userDefinedHighlightSelectedNodesExists_H = false;
  
  var OFFSETX = 0;
  var OFFSETY = -1 * document.height * 0.1;
