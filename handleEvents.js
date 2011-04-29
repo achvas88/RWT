@@ -56,7 +56,7 @@ function handleSelection(startX,startY,endX,endY)
 	
 	redrawChart();
 	
-	centerScrollbar("omw_scrollpane");
+	centerScrollbar("omw_scrollpane",canvas);
  }
  
  function handleZoomOut()
@@ -71,6 +71,7 @@ function handleSelection(startX,startY,endX,endY)
 	
 	redrawChart();
 	
-	centerScrollbar("omw_scrollpane");
+	centerScrollbar("omw_scrollpane",canvas);
  }
+ 
  

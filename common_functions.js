@@ -91,6 +91,15 @@
 	}
  }
  
+ function drawRect(theCanvas,left,top,width,height,color,borderColor)
+ {
+	var ctx=theCanvas.getContext("2d");
+	ctx.strokeStyle = borderColor;
+	ctx.fillStyle = color;
+	ctx.fillRect(left,top,width,height);
+	ctx.strokeRect(left,top,width,height);
+ }
+ 
  function drawLine(thecanvas,x1,y1,x2,y2,value,thickness,transparency) //  if u wanna directly mention numbers for thickness ,  set value = 0
  {
 	var r=0,g=0,b=0;
@@ -251,4 +260,31 @@ function deselectNode_H(i)	// this 'i' refers to the index in the theElements ar
 		}
 	}
 	highlightSelectedNodes_H();
+}
+
+function highlightSelectedNodes_I()
+ {
+	var debTA  = document.getElementById(debuggingTextAreaID_I);
+	var debText = "\nSelected Nodes:";
+	for(var i=0;i<selectedNodes_I.length;i++)
+	{
+		debText+=selectedNodes_I[i]+" ";
+		drawRect(canvas_I,elements_I[selectedNodes_I[i]].X,elements_I[selectedNodes_I[i]].Y,elements_I[selectedNodes_I[i]].WIDTH,LEVEL_HEIGHT,"#FF0000","black");
+	}
+	debText+="\n";
+	debTA.value = debText;
+ }
+  
+function deselectNode_I(i)	// this 'i' refers to the index in the theElements array
+{
+	drawRect(canvas_I,elements_I[i].X,elements_I[i].Y,elements_I[i].WIDTH,LEVEL_HEIGHT,"#33FF00","black");
+	
+	for(var j=0;j<selectedNodes_I.length;j++)
+	{
+		if(selectedNodes_I[j] == i)
+		{
+			selectedNodes_I.splice(j,1);
+		}
+	}
+	//highlightSelectedNodes_I();
 }

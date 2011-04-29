@@ -28,6 +28,8 @@
  // holds the elements_H present in each level
  var levelElements_H = new Array();
  
+ var levelsToDraw = 2;
+ 
  // adjacencyList is a 2D array . 
  // Rows indicate the different elements_H
  // columns indicate the neighbors of the elements_H
@@ -61,21 +63,24 @@
 		levelElements_H[depth].push(parentIndex);
 	}
 	
+	if(childrenList_H[parentIndex] == undefined)childrenList_H[parentIndex] = new Array();
+	
 	for(var i=0;i<childrenList_H[parentIndex].length;i++)
 	{
 		populateLevelElements_H(childrenList_H[parentIndex][i],depth+1);
 	}
  }
  
+ 
  function drawTheChart_H(theCanvasID,selectionCanvasID,theElements,theChildren,theDebuggingTextAreaID)
  {
 	
 	canvas_H  = document.getElementById(theCanvasID);
 	canvas2_H = document.getElementById(selectionCanvasID);
-	elements_H = theElements;
-	childrenList_H = theChildren;
+	//elements_H = theElements;
+	//childrenList_H = theChildren;
 	debuggingTextAreaID_H = theDebuggingTextAreaID;
-	RADIUS_OF_CIRCLES_H = Math.min((0.00001*canvas.width*canvas.height),10);
+	RADIUS_OF_CIRCLES_H = Math.min((0.00001*canvas_H.width*canvas_H.height),10);
 	
 	
 	drawChart_H();
@@ -88,15 +93,20 @@
 		
  }
  
+ function expandSelected()
+ {
+	alert("your mouse is working ... dont spoil it");
+ }
+ 
  function handleDblClick_H()
  {
-	alert("double clicked");
+	expandSelected();
  }
  
  function redrawChart_H()
  {
 	octTreeRegions_H = [];
-	RADIUS_OF_CIRCLES_H = Math.min((0.00001*canvas.width*canvas.height),10);
+	RADIUS_OF_CIRCLES_H = Math.min((0.00001*canvas_H.width*canvas_H.height),10);
 		
 	maxWidth = calculateMaxCanvasWidth(RADIUS_OF_CIRCLES_H,HORIZONTAL_SPACING);
 	canvas_H.width = Math.max(maxWidth,canvas_H.width); 
@@ -120,7 +130,7 @@
 		drawLevel_H(i,centerx,centery,HORIZONTAL_SPACING,VERTICAL_SPACING);
 	}
 	
-	connectThemAll_H();
+	//connectThemAll_H();
 	highlightSelectedNodes_H();
 	
  }
@@ -173,7 +183,8 @@
  function calculateMaxCanvasWidth(RADIUS_OF_CIRCLES_H,HORIZONTAL_SPACING)
  {
 	var maxElementsInALevel = 0;
-	for(var i=0;i<levelElements_H.length;i++)
+	var levelsVisible = Math.min(levelElements_H.length,levelsToDraw);
+	for(var i=0;i<levelsVisible;i++)
 	{
 		if(maxElementsInALevel<levelElements_H[i].length) maxElementsInALevel = levelElements_H[i].length;
 	}
@@ -188,6 +199,8 @@
  
  function drawChart_H()
  {
+	//createNullArrayWhenUndefinedElementFound();
+	
 	populateLevelElements_H(0,0);
 	
 	maxWidth = calculateMaxCanvasWidth(RADIUS_OF_CIRCLES_H,HORIZONTAL_SPACING);
@@ -207,12 +220,12 @@
 	initializeOctTree_H(0,0,canvas_H.width,canvas_H.height,LEVELS_IN_OCT_TREE_H,-1);
 	drawOctTreeRegions(canvas_H,LEVELS_IN_OCT_TREE_H);
 	
-	for(var i = 0;i<levelElements_H.length;i++)
+	for(var i = 0;i<levelsToDraw;i++)
 	{
 		drawLevel_H(i,centerx,centery,HORIZONTAL_SPACING,VERTICAL_SPACING);
 	}
 	
-	connectThemAll_H();
+	//connectThemAll_H();
 	viewOctTree(debuggingTextAreaID_H,octTreeRegions_H);
 }
 

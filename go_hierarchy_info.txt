@@ -1,0 +1,10 @@
+root
+
+GO:0008150
+P (biological process)
+
+GO:0003674
+F (molecular function)
+
+GO:0005575
+C (cellular component)

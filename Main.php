@@ -55,6 +55,26 @@
 		height:100%;
 	}
 	
+	#up_legend
+	{
+		position:absolute;
+		top:11%;
+		width:20px;
+		left:70%;
+		height:15px;
+		z-index:10;
+	}
+	
+	#bottom_legend
+	{
+		position:absolute;
+		top:57%;
+		width:20px;
+		left:70%;
+		height:15px;
+		z-index:10;
+	}
+	
 </style> 
 
 <link rel="stylesheet" type="text/css" href="dragresize/dragresize.css"></link> 
@@ -64,7 +84,11 @@
   
 <script language="javascript" type="text/javascript" src="jquery-1.5.js"></script> 
 <script language="javascript" type="text/javascript" src="degreeBasedRadialSortGraph.js"></script> 
-<script language="javascript" type="text/javascript" src="hierarchialGraph.js"></script>
+<script language="javascript" type="text/javascript" src="selectBoxFunctionalities.js"></script> 
+<script language="javascript" type="text/javascript" src="levelFunctionality.js"></script> 
+<script language="javascript" type="text/javascript" src="helperFunctions.js"></script> 
+<script language="javascript" type="text/javascript" src="handleMouseFunctions.js"></script> 
+<script language="javascript" type="text/javascript" src="icicleGraph.js"></script>
 <script language="javascript" type="text/javascript" src="expandableContent.js"></script>
 <script language="javascript" type="text/javascript" src="dragresize/dragresize.js"></script>
 <script language="javascript" type="text/javascript" src="flot/jquery.js"></script> 
@@ -73,29 +97,46 @@
 <script language="javascript" type="text/javascript" src="fsmenu/fsmenu.js"></script>
 <script type="text/javascript" src="gwindow/gwindow.js"></script> 
 
-<script type="text/javascript">
-
-var dragresize = new DragResize('dragresize',
- { minWidth: 100, minLeft: 0, minTop: 0 });
-
-dragresize.isElement = function(elm)
-{
- if (elm.className && elm.className.indexOf('drsElement') > -1) return true;
-};
-dragresize.isHandle = function(elm)
-{
- if (elm.className && elm.className.indexOf('drsMoveHandle') > -1) return true;
-};
-
-dragresize.apply(document);
-
-</script> 
-
 <script>
 
-var theElements = new Array();
-var adjacencyList = new Array();
+ // ALL VARIABLES //
+ 
+ var theElements = new Array();
+ var adjacencyList = new Array();
 
+ var userDefinedHighlightSelectedNodesExists = true;
+ var userDefinedHighlightSelectedNodesExists_H = false;
+ var contentCountThresholdValue = 1500;
+ 
+ var OFFSETX = 0;
+ var OFFSETY = -1 * document.height * 0.1;
+ var OFFSETX_H = 0;
+ var OFFSETY_H = -1 * document.height * 0.56;
+ 
+ var canvas2;
+ var isDown = false;
+ var startX,startY,endX,endY;
+ var theMode = "Content Count";
+ 
+ var listMenu;
+ var arrow = null;
+ 
+ var canvas2_H;
+ var isDown_H = false;
+ var startX_H,startY_H,endX_H,endY_H;
+ 
+ var counterr = 0;
+ var counterr2 = 0;
+
+ var stID,stdID2;
+ var zoomed1 = false
+ var zoomed2 = false
+ var gwin;
+ var chart_shown = false;
+ 
+ var elements_In_Children = new Array();
+ var index =  4 ; // 0,1,2,3 taken by root,P,F,C  respectively.
+ 
 </script>
 	
 	<?php
@@ -194,7 +235,7 @@ var adjacencyList = new Array();
 		unset($conn);
 	?>
 	
-	<?
+	<?php
 		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Initializing...</center></div>';
 		
 		echo '<script>var neighborsList = new Array();</script>';
@@ -209,83 +250,100 @@ var adjacencyList = new Array();
 		unset($neighborsList);
 	?>
 	
+	<?php
+	
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Loading the Gene-Ontology DAG...</center></div>';
+			
+		$dbhost = 'localhost:3306/';
+		$dbname = 'test';
+		$dbuser = '';
+		$dbpass = '';
+		$conn = mysql_connect($dbhost, $dbuser, $dbpass) or die                      ('Error connecting to mysql');
+
+		$listOfGOs = array();
+		$GosChildren = array();
+		mysql_select_db($dbname);
+	
+								
+		$query =  'SELECT `go_term`,`children` FROM `test`.`pc_table`';
+		$result = mysql_query($query);
+		if (!$result) 
+		{
+			die('Invalid query: ' . mysql_error());
+		}
+		else
+		{
+			while ($row = mysql_fetch_array($result, MYSQL_NUM)) 
+			{
+				$listOfGOs[] = $row[0];
+				$GosChildren[] = $row[1];
+			}
+		}
+	
+		
+		mysql_close($conn);
+		
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Loading the pc_table complete</center></div>';
+		
+		
+		unset($row);
+		unset($query);
+		unset($result);
+		unset($dbhost);
+		unset($dbname);
+		unset($dbuser);
+		unset($dbpass);
+		unset($conn);
+	?>
+	
+	<?php
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Initializing part 2...</center></div>';
+		
+		echo '<script>var elementstemp = new Array();</script>';
+		echo '<script>var elementshash = new Array();</script>';
+		echo '<script>var childrentemp = new Array();</script>';
+		
+		for($i=0;$i<count($listOfGOs);$i++)
+		{
+			echo '<script>elementstemp.push("' .$listOfGOs[$i]. '");</script>';
+			echo '<script>elementshash["' .$listOfGOs[$i]. '"] = '.$i.';</script>';
+		}
+		
+		for($i=0;$i<count($GosChildren);$i++)
+		{
+			echo '<script>var tempNeigh = new Array();</script>';
+			echo '<script>tempNeigh.push("' .$GosChildren[$i]. '");</script>';
+			echo '<script>childrentemp.push(tempNeigh);</script>';
+		}
+		
+		unset($listOfGOs);
+		unset($GosChildren);
+		
+		
+	?>
 	
 <script>
 
- var userDefinedHighlightSelectedNodesExists = true;
- var userDefinedHighlightSelectedNodesExists_H = false;
- 
- var OFFSETX = 0;
- var OFFSETY = -1 * document.height * 0.1;
- var OFFSETX_H = 0;
- var OFFSETY_H = -1 * document.height * 0.56;
- var contentCountThresholdValue = 1500;
-  
- var canvas2;
- var isDown = false;
- var startX,startY,endX,endY;
- var theMode = "Content Count";
- 
- function handleMouseDown(evt)
- {
-	if(!evt.ctrlKey)
-	{
-		handleDeselection();	
-	}
-	
-	var scrollbar = document.getElementById("omw_scrollpane");
-	
-	isDown = true;
-	startX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
-	startY = OFFSETY + scrollbar.scrollTop + evt.clientY;
- }
- 
- function handleMouseUp(evt)
- {
- 	var scrollbar = document.getElementById("omw_scrollpane");
-	
-	endX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
-	endY = OFFSETY + scrollbar.scrollTop + evt.clientY;
-	isDown = false;
-	handleSelection(startX,startY,endX,endY);
- }
- 
+ // ALL FUNCTIONS //
 
- function handleMouseMove(evt)
- {	
-	var scrollbar = document.getElementById("omw_scrollpane");
-	
- 	var ctx = canvas2.getContext("2d");
-	ctx.clearRect(0,0,canvas2.width,canvas2.height);
-		
-	if(isDown)
-	{
-		ctx.strokeStyle = "rgba(50,50,50,0.4)";
-		ctx.lineWidth = 1;
-		ctx.beginPath();
-		ctx.moveTo(startX,								startY);
-		ctx.lineTo(OFFSETX + scrollbar.scrollLeft + evt.clientX,	startY);
-		ctx.lineTo(OFFSETX + scrollbar.scrollLeft + evt.clientX,	OFFSETY + scrollbar.scrollTop +evt.clientY);
-		ctx.lineTo(startX,								OFFSETY + scrollbar.scrollTop +evt.clientY);
-		ctx.closePath();
-		ctx.stroke();
-	}
-		
- }
  
- function clearSelectedList()
+ var dragresize = new DragResize('dragresize',
+ { minWidth: 100, minLeft: 0, minTop: 0 });
+
+ dragresize.isElement = function(elm)
  {
-	var sList = document.getElementById("selectedList");
-	var aList = document.getElementById("allList");
-	while(sList.options.length>0)
-	{
-		aList.options[sList.options[0].ind].selected = false;
-		sList.options.remove(0);
-	}
- }
+  if (elm.className && elm.className.indexOf('drsElement') > -1) return true;
+ };
+ dragresize.isHandle = function(elm)
+ {
+  if (elm.className && elm.className.indexOf('drsMoveHandle') > -1) return true;
+ };
+
+ dragresize.apply(document);
+
  
- function userDefinedHighlightSelectedNodes()
- {
+function userDefinedHighlightSelectedNodes()
+{
  
 	var sList = document.getElementById("selectedList");
 	var aList = document.getElementById("allList");
@@ -309,59 +367,14 @@ var adjacencyList = new Array();
 	debText+="\n";
 	debTA.value = debText;
  }
- 
- function neighborListToAdjacencyList()
- {
-	var lV =  document.getElementById("loadedValue");
-	lV.innerHTML = "Converting Neighbor List To Adjacency List";
-	
-	for(var i=0;i<neighborsList.length;i++)
-	{
-		if(neighborsList[i].length == 1 && neighborsList[i][0] == "\"\"")
-		{
-			adjacencyList.push(new Array());
-		}
-		else
-		{
-			var theNeighbors = ''+neighborsList[i]+'';
-			var neighborArray = theNeighbors.split(',');
-			adjacencyList.push(neighborArray);
-		}
-	}
-}
- 
- function createTheGraphContents()
- {
+  
+function createTheGraphContents()
+{
 	var canvasID = "myCanvas";
 	var selectionCanvasID = "MyCanvas2";
 	var theDebuggingTextAreaID = "debugTA";
 	var contentCountThreshold = document.getElementById('thresh');
 		
-	
-	//neighborListToAdjacencyList();
-	
-		
-	//var adjacencyList = [[1,2],[0],[0,3],[2,4,5],[3],[3],[]];
-	/*for(var i=0;i<theElements.length;i++)
-	{
-		var randList = new Array();
-		
-		var noofneighbors = Math.floor(Math.random()*10);
-		
-		for(var j=0;j<noofneighbors;j++)		// too rough.. these noofneighbors do not actually reflect on the actual number of neighbors.
-		{
-			var neighbor = Math.floor(Math.random()*theElements.length);
-			if(neighbor != i && notAlreadyPresent(randList,neighbor))
-			{
-				randList.push(neighbor)
-			}
-		}
-		
-		adjacencyList.push(randList);
-	}
-	*/
-	
-	
 	var levelRanges = [[0,2],[3,4],[5,10],[11,20],[21,50],[51,500],[501,12000]];
 	
 	var lRangesBox = document.getElementById('lRanges');
@@ -375,612 +388,103 @@ var adjacencyList = new Array();
 	lRangesBox.size = 2;
 	
 	drawTheChart(canvasID,selectionCanvasID,levelRanges,undefined,undefined,theDebuggingTextAreaID,"Content Count"); //contents, degree - modes
-	displayDebugInformation();
+	//displayDebugInformation();
  }
  
- function parseStringToNumberArray( theString)
- {
-		var stringArray = theString;
-		var stringnum1 = "";
-		var stringnum2 = "";
-		var num1 = new Number();
-		var num2 = new Number();
-		var first = true;
-		for(var j=0;j<stringArray.length;j++)
-		{
-			if(stringArray[j] == ",") 
-			{
-				first = false;
-				continue;
-			}
-			if(first)
-			{
-				stringnum1 +=stringArray[j];
-			}
-			else
-			{
-				stringnum2 +=stringArray[j];
-			}
-		}
-		
-		num1 = stringnum1;
-		num2 = stringnum2;
-		
-		var levelarray = new Array();
-		levelarray.push(stringnum1);
-		levelarray.push(stringnum2);
-		return levelarray;
- }
- 
- function editLevel()
- {
-	var canvas = document.getElementById('myCanvas');
-	var canvas1 = document.getElementById('MyCanvas1');
-	var canvas2 = document.getElementById('MyCanvas2');
-	var ctx = canvas.getContext("2d");
-	var ctx1 = canvas1.getContext("2d");
-	var ctx2 = canvas2.getContext("2d");
-	var lRangesBox = document.getElementById('lRanges');
-	
-	var response = window.prompt('Enter the new range (format: [number],[number])');
-	lRangesBox.options[lRangesBox.selectedIndex].text = response;
-	
-	var levelRanges = new Array(); 
-	for(var i=0;i<lRangesBox.options.length;i++)
-	{
-		levelRanges.push(parseStringToNumberArray(lRangesBox.options[i].text));
-	}
-	
-	for(var j=0;j<theElements.length;j++)	// nullify the initial angles of the theElements
-	{
-		theElements[j].angle = undefined;
-	}
-	ctx.clearRect(0,0,canvas.width,canvas.height);
-	ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-	ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-	
-	drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Content Count"); //contents, degree - modes
-	
- }
-  
- function removeLevel()
- {
-	var canvas = document.getElementById('myCanvas');
-	var canvas1 = document.getElementById('MyCanvas1');
-	var canvas2 = document.getElementById('MyCanvas2');
-	var ctx = canvas.getContext("2d");
-	var ctx1 = canvas1.getContext("2d");
-	var ctx2 = canvas2.getContext("2d");
-	
-	var lRangesBox = document.getElementById('lRanges');
-	lRangesBox.options.remove(lRangesBox.selectedIndex);
-	
-	var levelRanges = new Array(); 
-	for(var i=0;i<lRangesBox.options.length;i++)
-	{
-		levelRanges.push(parseStringToNumberArray(lRangesBox.options[i].text));
-	}
-	
-	for(var j=0;j<theElements.length;j++)	// nullify the initial angles of the theElements
-	{
-		theElements[j].angle = undefined;
-	}
-	ctx.clearRect(0,0,canvas.width,canvas.height);
-	ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-	ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-	
-	drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Content Count"); //contents, degree - modes
- }
- 
- function addLevel()
- {
-	var canvas = document.getElementById('myCanvas');
-	var canvas1 = document.getElementById('MyCanvas1');
-	var canvas2 = document.getElementById('MyCanvas2');
-	var ctx = canvas.getContext("2d");
-	var ctx1 = canvas1.getContext("2d");
-	var ctx2 = canvas2.getContext("2d");
-	var lRangesBox = document.getElementById('lRanges');
-	
-	var response = window.prompt('Enter the new range (format: [number],[number])');
-	var newoptn = document.createElement("OPTION");
-	newoptn.text = response;
-	lRangesBox.options.add(newoptn);	
-		
-	
-	var levelRanges = new Array(); 
-	for(var i=0;i<lRangesBox.options.length;i++)
-	{
-		levelRanges.push(parseStringToNumberArray(lRangesBox.options[i].text));
-	}
-	
-	for(var j=0;j<theElements.length;j++)	// nullify the initial angles of the theElements
-	{
-		theElements[j].angle = undefined;
-	}
-	ctx.clearRect(0,0,canvas.width,canvas.height);
-	ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-	ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-	
-	drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Content Count"); //contents, degree - modes
- 
- }
-
- function moveLevelUp()
- {
-	var canvas = document.getElementById('myCanvas');
-	var canvas1 = document.getElementById('MyCanvas1');
-	var canvas2 = document.getElementById('MyCanvas2');
-	var ctx = canvas.getContext("2d");
-	var ctx1 = canvas1.getContext("2d");
-	var ctx2 = canvas2.getContext("2d");
-	var lRangesBox = document.getElementById('lRanges');
-	
-	//var response = window.prompt('Enter the new range (format: [number],[number])');
-	//var newoptn = document.createElement("OPTION");
-	//newoptn.text = response;
-	//lRangesBox.options.add(newoptn);	
-		
-	if(lRangesBox.selectedIndex>0)
-	{
-		var temp = lRangesBox.options[lRangesBox.selectedIndex].text;
-		lRangesBox.options[lRangesBox.selectedIndex].text = lRangesBox.options[lRangesBox.selectedIndex-1].text;
-		lRangesBox.options[lRangesBox.selectedIndex-1].text = temp;
-		lRangesBox.selectedIndex = lRangesBox.selectedIndex-1;
-		
-		var levelRanges = new Array(); 
-		for(var i=0;i<lRangesBox.options.length;i++)
-		{
-			levelRanges.push(parseStringToNumberArray(lRangesBox.options[i].text));
-		}
-		
-		for(var j=0;j<theElements.length;j++)	// nullify the initial angles of the theElements
-		{
-			theElements[j].angle = undefined;
-		}
-		ctx.clearRect(0,0,canvas.width,canvas.height);
-		ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-		ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-		
-		drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Content Count"); //contents, degree - modes
-	} 
- }
- 
- function moveLevelDown()
- {
-	var canvas = document.getElementById('myCanvas');
-	var canvas1 = document.getElementById('MyCanvas1');
-	var canvas2 = document.getElementById('MyCanvas2');
-	var ctx = canvas.getContext("2d");
-	var ctx1 = canvas1.getContext("2d");
-	var ctx2 = canvas2.getContext("2d");
-	var lRangesBox = document.getElementById('lRanges');
-	
-	//var response = window.prompt('Enter the new range (format: [number],[number])');
-	//var newoptn = document.createElement("OPTION");
-	//newoptn.text = response;
-	//lRangesBox.options.add(newoptn);	
-		
-	if(lRangesBox.selectedIndex<lRangesBox.options.length-1)
-	{
-		var temp = lRangesBox.options[lRangesBox.selectedIndex].text;
-		lRangesBox.options[lRangesBox.selectedIndex].text = lRangesBox.options[lRangesBox.selectedIndex+1].text;
-		lRangesBox.options[lRangesBox.selectedIndex+1].text = temp;
-		lRangesBox.selectedIndex = lRangesBox.selectedIndex+1;
-		
-		var levelRanges = new Array(); 
-		for(var i=0;i<lRangesBox.options.length;i++)
-		{
-			levelRanges.push(parseStringToNumberArray(lRangesBox.options[i].text));
-		}
-		
-		for(var j=0;j<theElements.length;j++)	// nullify the initial angles of the theElements
-		{
-			theElements[j].angle = undefined;
-		}
-		ctx.clearRect(0,0,canvas.width,canvas.height);
-		ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-		ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-		
-		drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Content Count"); //contents, degree - modes
-	} 
- }
- 
- 
- function updateMode()
- {
-	var modes = document.getElementById('modes');
-	var cmode = document.getElementById('cmode');
-	var lRangesBox = document.getElementById('lRanges');
-	var canvas = document.getElementById('myCanvas');
-	var canvas1 = document.getElementById('MyCanvas1');
-	var canvas2 = document.getElementById('MyCanvas2');
-	var ctx = canvas.getContext("2d");
-	var ctx1 = canvas1.getContext("2d");
-	var ctx2 = canvas2.getContext("2d");
-	
-	while(lRangesBox.options.length>0) lRangesBox.options.remove(0);
-	
-	for(var i=0;i<modes.options.length;i++)
-	{
-	
-		if(modes.options[i].selected == true && theMode!=modes.options[i].value)
-		{
-			for(var j=0;j<theElements.length;j++)	// nullify the initial angles of the theElements
-			{
-				theElements[j].angle = undefined;
-			}
-			ctx.clearRect(0,0,canvas.width,canvas.height);
-			ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-			ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-			
-			theMode=modes.options[i].value;
-			cmode.innerHTML = theMode;
-			if(theMode == "Degree")
-			{
-				var levelRanges = [[0,2],[3,5],[6,8],[9,10]];
-				for(var i=0;i<levelRanges.length;i++)
-				{
-					var newoptn = document.createElement("OPTION");
-					newoptn.text = levelRanges[i];
-					lRangesBox.options.add(newoptn);	
-				}
-				lRangesBox.size = 2;
-				drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Degree"); //contents, degree - modes
-			}
-			else if(theMode == "Content Count")
-			{
-				var levelRanges = [[0,2],[3,4],[5,10],[11,20],[21,50],[51,500],[501,12000]];
-				for(var i=0;i<levelRanges.length;i++)
-				{
-					var newoptn = document.createElement("OPTION");
-					newoptn.text = levelRanges[i];
-					lRangesBox.options.add(newoptn);	
-				}
-				lRangesBox.size = 2;
-				drawTheChart("myCanvas","MyCanvas2",levelRanges,undefined,undefined,"debugTA","Content Count"); //contents, degree - modes
-			}
-		}
-	}
- }
- 
- function notAlreadyPresent(randList,neighbor)
- {
-	for(var i=0;i<randList.length;i++)
-	{
-		if(randList[i] == neighbor) return false;
-	}
-	return true;
- }
- 
- var started = false;
-  
- function handleMouseOver(evt) {
-	
-	var canvas=document.getElementById("myCanvas");
-	var context=canvas.getContext("2d");
-	
-	var x, y;
-
-    // Get the mouse position relative to the canvas element.
-    if (evt.layerX || evt.layerX == 0) { // Firefox
-      x = evt.layerX;
-      y = evt.layerY;
-    } else if (evt.offsetX || evt.offsetX == 0) { // Opera
-      x = evt.offsetX;
-      y = evt.offsetY;
-    }
-	//x = evt.clientX,y = evt.clientY;
-	context.moveTo(x, y);
-	var imgd = context.getImageData(x,y, 1, 1);
-	var pix = imgd.data;
-	
-	for(var i =0;i<pix.length;i+=4)
-	{
-		var val1 = pix[i]; // red
-		var val2 = pix[i+1]; // green
-		var val3 = pix[i+2]; // blue
-	}
-	
-	//var locr = document.getElementById('col');
-	//locr.value = val1 + ":" +val2 +":" +val3; 
-	
-}
-
-var listMenu;
-var arrow = null;
-
-function createMenu()
-{
-	listMenu = new FSMenu('listMenu', true, 'display', 'block', 'none');
-	listMenu.animations[listMenu.animations.length] = FSMenu.animFade;
-	//listMenu.animations[listMenu.animations.length] = FSMenu.animSwipeDown;
-	listMenu.animations[listMenu.animations.length] = FSMenu.animClipDown;
-	listMenu.showOnClick = 1;
-	
-	if (document.createElement && document.documentElement)
-	{
-	 arrow = document.createElement('span');
-	 arrow.appendChild(document.createTextNode('>'));
-	 arrow.className = 'subind';
-	}
-	addReadyEvent(new Function('listMenu.activateMenu("listMenuRoot", arrow)'));
-}
-
 function init()
 {
 	createTheGraphContents();
-	//initializeChart();
 	populateSelectBox();
-	//createMenu();
 	canvas2 = document.getElementById("MyCanvas2");
 	canvas2.addEventListener("mousedown", handleMouseDown);
 	canvas2.addEventListener("mouseup", handleMouseUp);
 	canvas2.addEventListener("mousemove", handleMouseMove);
 }
-
-
- var canvas2_H;
- var isDown_H = false;
- var startX_H,startY_H,endX_H,endY_H;
  
 function createTheGraphContents_H()
- {
+{
 	var canvasID = "myCanvass";
 	var selectionCanvasID = "MyCanvass2";
 	var theDebuggingTextAreaID = "debugTA";
 	
-	var theElements = [{"name":"root","description":"none"},{"name":"a","description":"one"},{"name":"b","description":"two"},{"name":"c","description":"three"},{"name":"d","description":"four"},{"name":"e","description":"five"},{"name":"f","description":"six"},{"name":"g","description":"seven"}];
-	var children = [[1,2],[3,4],[3,6],[5],[5,7],[],[7],[]];
+	
+	//elements_I = [{"name":"root","description":"none"},{"name":"a","description":"one"},{"name":"b","description":"two"},{"name":"c","description":"three"},{"name":"d","description":"four"},{"name":"e","description":"five"},{"name":"f","description":"six"},{"name":"g","description":"seven"}];
+	//childrenList_I = [[1,2],[3,4],[3,6],[5],[5,7],[],[7],[]];
 		
-	drawTheChart_H(canvasID,selectionCanvasID,theElements,children,theDebuggingTextAreaID);
-	displayDebugInformation_H();
+	drawTheChart_I(canvasID,selectionCanvasID,undefined,undefined,theDebuggingTextAreaID);
+		
+	displayDebugInformation_I();
 }
 
- function handleMouseDown_H(evt)
- {
-	//unHighlightAllChildren_H();
-	
-	if(!evt.ctrlKey)
-	{
-		handleDeselection_H();	
-	}
-	
-	var scrollbar = document.getElementById("omw_scrollpane_H");
-	
-	isDown_H = true;
-	startX_H = OFFSETX_H + scrollbar.scrollLeft + evt.clientX;
-	startY_H = OFFSETY_H + scrollbar.scrollTop + evt.clientY;
- }
- 
- function handleMouseUp_H(evt)
- {
- 	var scrollbar = document.getElementById("omw_scrollpane_H");
-	
-	endX_H = OFFSETX_H + scrollbar.scrollLeft + evt.clientX;
-	endY_H = OFFSETY_H + scrollbar.scrollTop + evt.clientY;
-	isDown_H = false;
-	handleSelection_H(startX_H,startY_H,endX_H,endY_H);
- }
- 
+var childrenList_H_2 = new Array();
 
- function handleMouseMove_H(evt)
- {	
-	var scrollbar = document.getElementById("omw_scrollpane_H");
-	
- 	var ctx = canvas2_H.getContext("2d");
-	ctx.clearRect(0,0,canvas2_H.width,canvas2_H.height);
-		
-	if(isDown_H)
+function initializeArrays()
+{
+	var childrenList_H_ = new Array();
+	for(var i=0;i<childrentemp.length;i++)
 	{
-		ctx.strokeStyle = "rgba(50,50,50,0.4)";
-		ctx.lineWidth = 1;
-		ctx.beginPath();
-		ctx.moveTo(startX_H,startY_H);
-		ctx.lineTo(OFFSETX_H + scrollbar.scrollLeft + evt.clientX,startY_H);
-		ctx.lineTo(OFFSETX_H + scrollbar.scrollLeft + evt.clientX,OFFSETY_H + scrollbar.scrollTop +evt.clientY);
-		ctx.lineTo(startX_H,OFFSETY_H + scrollbar.scrollTop +evt.clientY);
-		ctx.closePath();
-		ctx.stroke();
+		var tempList = new Array();
+		tempList = childrentemp[i].toString().split(",");
+		//alert(tempList.length);
+		childrenList_H_.push(tempList);
 	}
+	childrentemp = [];
+	
+	// now, childrenList_H_ array has values in the form childrenList_H_[0][0] = "GO:123234"; childrenList_H_[0][1] = "GO:123232" etc
+	
+	
+	for(var i=0;i<childrenList_H_.length;i++)
+	{
+		var tempList = new Array();
+		for(var j=0;j<childrenList_H_[i].length;j++)
+		{
+			if(elementshash[childrenList_H_[i][j]] != undefined)
+			{
+				tempList.push(elementshash[childrenList_H_[i][j]]);
+			}
+		}
+		childrenList_H_2.push(tempList);
+	}
+	childrenList_H_ = [];
+	
+	// now, childrenList_H_2 array has values in the form childrenList_H_2[0][0] = 0; childrenList_H_2[0][1] = 1 etc
+	// the index corresponds to their location in the elementstemp array.
+	
+	// alert(elementstemp[20] +" ====>" + elementstemp[childrenList_H_2[20][0]] + "   ,  " + elementstemp[childrenList_H_2[20][1]]);
+	
+	var P = "GO:0008150";	// biological process
+	var F = "GO:0003674";	// molecular function
+	var C = "GO:0005575";	// cellular component
+	var PIndex = elementshash[P];
+	var FIndex = elementshash[F];
+	var CIndex = elementshash[C];
 		
- }
- 
+	
+	
+	// inserting root,P,F,C 
+	elements_I = [{"name":"root","description":"theRoot","index":-1} , {"name":elementstemp[PIndex],"description":"","index":PIndex}, {"name":elementstemp[FIndex],"description":"","index":FIndex} , {"name":elementstemp[CIndex],"description":"","index":CIndex} ];
+	childrenList_I = [[1,2,3],[],[],[]];
+	
+	
+	fillChildren(PIndex,1,0);	// (index of element in elementstemp and childrenList_H_2, index in childrenList_H )
+	fillChildren(FIndex,2,0);
+	fillChildren(CIndex,3,0);
+	
+	elements_In_Children = [];
+	childrenList_H_2 = [];
+	
+}
+
+
 function init_H()
 {
+	initializeArrays();
+	populateSelectBox_H();
 	createTheGraphContents_H();
-
 	canvas2_H = document.getElementById("MyCanvass2");
-	canvas2_H.addEventListener("mousedown", handleMouseDown_H);
-	canvas2_H.addEventListener("mouseup", handleMouseUp_H);
-	canvas2_H.addEventListener("mousemove", handleMouseMove_H);
-}
-
-
-function viewDetails()
-{
-	var theSelectedList = document.getElementById('selectedList');
-	var debTA  = document.getElementById(debuggingTextAreaID);
-	var details = "Selected Nodes:\n\n";
-	
-	for(var i=0;i<theSelectedList.options.length;i++)
-	{
-		if(theSelectedList.options[i].selected == true)
-		{
-			details += "-----------------------\n";
-			details += "Regulon Name: " + theElements[theSelectedList.options[i].ind].name +  "\n";
-			details += "Description: " + theElements[theSelectedList.options[i].ind].description +  "\n";
-			details += "Genes contained: " + theElements[theSelectedList.options[i].ind].contentCount +  "\n";
-			
-			var neighbors = adjacencyList[theSelectedList.options[i].ind];
-			details += "Number of Neighbors: " + neighbors.length + "\n";
-			
-			details += "Neighboring Regulons: ";
-			for(var j=0;j<neighbors.length;j++)
-			{
-				details += ""+ theElements[neighbors[j]].name;
-				if(j<neighbors.length-1)details += ", ";
-			}
-			details += "\n";
-		}
-	}
-	
-	debTA.value = details;
-}
-
-function selectionAction(optn,ctrl)
-{
-   var theSelectedList = document.getElementById('selectedList');
-   var theWholeList = document.getElementById('allList');
-   
-   if(!ctrl)
-   {
-   		while(theSelectedList.options.length>0)
-		{
-			theSelectedList.options.remove(0);
-		}
-		
-		var newoptn = document.createElement("OPTION");
-		newoptn.text = optn.text;
-		newoptn.ind = optn.ind; // corresponds to the index in the alllist and the theElements array
-		theSelectedList.options.add(newoptn);
-		handleDeselection();
-		selectedNodes.push(optn.ind);
-		highlightSelectedNodes();
-		return;
-   }
-	
-   if(optn.selected) // if selected
-   {
-		//check if already in selected 
-		var flag = 1;
-   		for(var i=0;i<theSelectedList.options.length;i++)
-		{
-			if(theSelectedList.options[i].text == optn.text)	// if yes flag =0
-			{
-				flag = 0;
-				break;
-			}
-		}
-		if(flag == 1) // if not already selected
-		{
-			var newoptn = document.createElement("OPTION");
-			newoptn.text = optn.text;
-			newoptn.ind = optn.ind;
-			theSelectedList.options.add(newoptn);	
-			selectedNodes.push(optn.ind);
-			highlightSelectedNodes();
-		}
-	}	
-	else // if unselected
-	{
-		//check if in selected 
-		for(var i=0;i<theSelectedList.options.length;i++)
-		{
-			if(theSelectedList.options[i].text == optn.text)	// if yes remove it
-			{
-				deselectNode(theSelectedList.options[i].ind);
-				theSelectedList.options.remove(i);
-				break;
-			}
-		}
-	}
-}
-
-
-var counterr = -1;
-
-function addOption(selectbox)
-{
-	sbox = document.getElementById(selectbox);
-	var ta = document.getElementById("loadedValue");
-	var taholder = document.getElementById("loading");
-	taholder.style.display = "block";
-	counterr++;
-	if(counterr >= theElements.length)
-	{
-		if(stID!=undefined)
-			clearInterval(stID);
-		//ta.value = "Loaded " + theElements.length + " Regulons";
-		ta.innerHTML = "<center>&nbsp; Loading complete &nbsp;</center>";
-		taholder.style.display = "none";
-		return;
-	}
-	
-	ta.innerHTML = "<center>&nbsp; Loading : "+Math.floor((counterr+1)/theElements.length * 100)+"% &nbsp;</center>";
-	
-	var optn = document.createElement("OPTION");
-	optn.text = theElements[counterr].name;
-	optn.ind = counterr;
-	optn.onclick = function(evt)
-	{
-		selectionAction(this,evt.ctrlKey);
-	}
-	sbox.options.add(optn);
-	
-}
-
-var stID;
-
-function populateSelectBox()
-{
-	//stID = setInterval("addOption('allList')",0);
-	
-	for(var i=0;i<theElements.length + 1;i++)
-	{
-		addOption('allList');
-	}
-	
-}
-
-function mouseSelect(e)
-{
-
-}
-
-// POP UP MENU
-function  ItemSelMenu(e)
-{
-  return false;
-}
-
-/*
-<?php
-		$sql = "SELECT category_id, category_name FROM categories ".
-		"ORDER BY category_name";
-
-		$rs = mysql_query($sql);
-
-		while($row = mysql_fetch_array($rs))
-		{
-		  echo "<option value=\"".$row['category_id']."\">".$row['category_name']."\n  ";
-		}
-		?>
-*/
-
-function removeSelected()
-{
-	sbox = document.getElementById('selectedList');
-	abox = document.getElementById('allList');
-	
-	for(var i=0;i<sbox.options.length;i++)
-	{
-		if(sbox.options[i].selected) 
-		{
-			abox.options[sbox.options[i].ind].selected = false;
-			drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[sbox.options[i].ind].X,theElements[sbox.options[i].ind].Y,"#33FF00");
-			for(var j=0;j<selectedNodes.length;j++)
-			{
-				if(selectedNodes[j] == sbox.options[i].ind)
-				{
-					selectedNodes.splice(j,1);
-				}
-			}
-			sbox.options.remove(i);
-			//remove() ////////////////////////////////////////////
-			i--;
-		}
-	}
+	//canvas2_H.addEventListener("mousedown", handleMouseDown_H);
+	//canvas2_H.addEventListener("mouseup", handleMouseUp_H);
+	//canvas2_H.addEventListener("mousemove", handleMouseMove_H);
 }
 
 function initializeChart()
@@ -1101,13 +605,6 @@ $(function () {
 });
 }
 
-var test = new Array();
-test["a"] = 0;
-test["b"] = 1;
-test["c"] = 2;
-test["d"] = 3;
-
-
 function viewGenes()
 {
 	var theLevel = document.getElementById('level');
@@ -1145,8 +642,6 @@ function select()
 	
 }
 
-var zoomed1 = false
-
 function fullscreen1()
 {
 		var new_height;
@@ -1154,10 +649,11 @@ function fullscreen1()
 
 		var otherscrollpanel = document.getElementById('omw_scrollpane_H')
 		var button = document.getElementById('fullScreen');
-		var otherZoomIn = document.getElementById('zoomin_H');
-		var otherZoomOut = document.getElementById('zoomout_H');
+		var otherZoomIn = document.getElementById('zoomin_I');
+		var otherZoomOut = document.getElementById('zoomout_I');
 		var otherFullScreen = document.getElementById('fullScreen2_H');
 		var otherLevel = document.getElementById('level2');
+		var otherLegend = document.getElementById('bottom_legend');
 		
 		if (zoomed1) 
 		{
@@ -1167,6 +663,7 @@ function fullscreen1()
 			otherZoomOut.style.display = "block";
 			otherFullScreen.style.display = "block";
 			otherLevel.style.display = "block";
+			otherLegend.style.display = "block";
 		}
 		else 
 		{
@@ -1176,6 +673,7 @@ function fullscreen1()
 			otherZoomOut.style.display = "none";
 			otherFullScreen.style.display = "none";
 			otherLevel.style.display = "none";
+			otherLegend.style.display = "none";
 		}
 
 		zoomed1 = !zoomed1;
@@ -1183,12 +681,10 @@ function fullscreen1()
 	
 }
 
-var zoomed2 = false
-
 function fullscreen2()
 {
 		var new_height;
-		var new_ypos;
+		var new_ypos,new_ypos2;
 		var scrollpanel = document.getElementById("omw_scrollpane_H");
 
 		var otherscrollpanel = document.getElementById('omw_scrollpane')
@@ -1198,27 +694,33 @@ function fullscreen2()
 		var otherFullScreen = document.getElementById('fullScreen');
 		var otherLevel = document.getElementById('level');
 		var zoomPanel = document.getElementById('zoom_panel2');
+		var otherLegend = document.getElementById('up_legend');
+		var theLegend = document.getElementById('bottom_legend');
 		
 		if (zoomed2) 
 		{
 			new_ypos = "56%";
+			new_ypos2 = "57%";
 			new_height = "43%";
 			otherscrollpanel.style.display = "block";
 			otherZoomIn.style.display = "block";
 			otherZoomOut.style.display = "block";
 			otherFullScreen.style.display = "block";
 			otherLevel.style.display = "block";
+			otherLegend.style.display = "block";
 			OFFSETY_H = -1 * document.height * 0.56;
 		}
 		else 
 		{
 			new_ypos = "10%";
+			new_ypos2 = "11%";
 			new_height = "89%";
 			otherscrollpanel.style.display = "none";
 			otherZoomIn.style.display = "none";
 			otherZoomOut.style.display = "none";
 			otherFullScreen.style.display = "none";
 			otherLevel.style.display = "none";
+			otherLegend.style.display = "none";
 			OFFSETY_H = -1 * document.height * 0.1;
 		}
 
@@ -1226,21 +728,8 @@ function fullscreen2()
 		
 		scrollpanel.style.height = new_height;
 		scrollpanel.style.top = new_ypos;
+		theLegend.style.top = new_ypos2;
 		zoomPanel.style.top = new_ypos;
-}
-
-
-var gwin;
-var chart_shown = false;
-
-function changeThreshold()
-{
-  response = window.prompt("Enter New Threshold Value");
-  if(!isNaN(response))
-  {
-	contentCountThresholdValue = response;
-  }
-  return;
 }
 
 function viewChart() {
@@ -1281,6 +770,21 @@ function viewChart() {
 	}
 }
 
+function toggleLegends()
+{
+	var l1 = document.getElementById("upL_V");
+	var l2 = document.getElementById("bottomL_V");
+	if(l1.style.display == "none")
+	{
+		l1.style.display = "block";
+		l2.style.display = "block";
+	}
+	else
+	{
+		l1.style.display = "none";
+		l2.style.display = "none";
+	}
+}
 
 </script>
 
@@ -1297,10 +801,8 @@ function viewChart() {
 	</center>
 </div-->		
 
-<body onload="init();init_H();">
+<body onload="init(); init_H(); ">
 
-	
-	
 	<!-- -->
 	<div id="menudiv" style="position:absolute; display:none; top:50px; left:50px;z-index:10000;" onmouseover="javascript:overpopupmenu=true;" onmouseout="javascript:overpopupmenu=false;">
 		<table width=82 cellspacing=1 cellpadding=0>
@@ -1336,6 +838,7 @@ function viewChart() {
 				</li>
 				<li><a href="#" onclick="viewChart();"><div id="viewChartID">View Chart</div></a></li>
 				<li><a href="#" onclick="changeThreshold();">Set Threshold Value for Regulons</a></li>
+				<li><a href="#" onclick="toggleLegends();">Toggle Legends</a></li>
 			</ul>
 		</li>
 	</ul>
@@ -1353,24 +856,29 @@ function viewChart() {
 				<button type="submit" id="zoomout"    style="z-index: 4;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
 				<button type="submit" id="fullScreen" style="z-index: 4;position:absolute;top:10px;left:90px;height:30px;" onclick="fullscreen1();"><img src="fullscreen.png" width = "20px" height = "20px"></button>
 				
-				<div id = "level" style="z-index: 2;position:absolute;top:50px;left:10px;width:100px;background:white"> Regulon Level </div>
+				<div id = "level" style="z-index: 2;position:absolute;top:50px;left:10px;width:100px;background:white"> Regulon Level</div>
+				
 			</div>
 		</div>
+		
+		<div id="up_legend"><div id="upL_V"><img src="reg_legend.jpg" ></div></div>
+		<div id="bottom_legend"><div id="bottomL_V"><!--img src="go_legend.jpg" --></div></div>
+		
 		
 		<div>
 		
 			<div id="omw_scrollpane_H">
-				<canvas id="MyCanvass2" width="1000px" height="1000px"  style="z-index: 7; position:absolute; left:0px; top:0px;"></canvas>	    
-				<canvas id="MyCanvass1" width="1000px" height="1000px"  style="z-index: 6; position:absolute; left:0px; top:0px;"></canvas>	    
-				<canvas id="myCanvass" width="1000px" height="1000px"   style="z-index: 5; position:absolute; left:0px; top:0px;">ur browser doesnt support canvas element.. do something!Now!</canvas>
+				<canvas id="MyCanvass2" width="10000px" height="500px"  style="z-index: 7; position:absolute; left:0px; top:0px;"></canvas>	    
+				<!--canvas id="MyCanvass1" width="10000px" height="500px"  style="z-index: 6; position:absolute; left:0px; top:0px;"></canvas-->	    
+				<canvas id="myCanvass" width="10000px" height="500px"   style="z-index: 5; position:absolute; left:0px; top:0px;">ur browser doesnt support canvas element.. do something!Now!</canvas>
 			</div>
 			
 			<div id="zoom_panel2">
-				<button type="submit" id="zoomin_H"     style="z-index: 8;position:absolute;top:10px;left:10px;height:30px;"><img src = "zoom_in.png" width = "20px" height = "20px"></button>
-				<button type="submit" id="zoomout_H"    style="z-index: 8;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="zoomin_I"     style="z-index: 8;position:absolute;top:10px;left:10px;height:30px;"><img src = "zoom_in.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="zoomout_I"    style="z-index: 8;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
 				<button type="submit" id="fullScreen2_H" style="z-index: 8;position:absolute;top:10px;left:90px;height:30px;" onclick="fullscreen2();"><img src="fullscreen.png" width = "20px" height = "20px" ></button>
 				
-				<div id = "level2" style="z-index: 2;position:absolute;top:50px;left:10px;width:100px;background:white">Gene Ontology</div>
+				<div id = "level2" style="z-index: 8;position:absolute;top:50px;left:10px;width:100px;background:white">Gene Ontology</div>
 			</div>
 		</div>
 		
