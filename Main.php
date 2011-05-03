@@ -137,6 +137,8 @@
  var elements_In_Children = new Array();
  var index =  4 ; // 0,1,2,3 taken by root,P,F,C  respectively.
  
+ var COUNTINPAGE = 1000;
+ 
 </script>
 	
 	<?php
@@ -362,7 +364,8 @@ function userDefinedHighlightSelectedNodes()
 		newoptn.ind = selectedNodes[i]; // corresponds to the index in the alllist
 		sList.options.add(newoptn);	
 		
-		aList.options[selectedNodes[i]].selected = true;
+		aList.options[selectedNodes[i] - 1].selected = true;
+		highlightChildren(selectedNodes[i]);
 	}
 	debText+="\n";
 	debTA.value = debText;
@@ -375,7 +378,7 @@ function createTheGraphContents()
 	var theDebuggingTextAreaID = "debugTA";
 	var contentCountThreshold = document.getElementById('thresh');
 		
-	var levelRanges = [[0,2],[3,4],[5,10],[11,20],[21,50],[51,500],[501,12000]];
+	var levelRanges = [[0,2],[3,4],[5,10],[11,20],[21,50],[51,500]];//,[501,12000]];
 	
 	var lRangesBox = document.getElementById('lRanges');
 	
@@ -479,6 +482,7 @@ function initializeArrays()
 function init_H()
 {
 	initializeArrays();
+	populatePages();
 	populateSelectBox_H();
 	createTheGraphContents_H();
 	canvas2_H = document.getElementById("MyCanvass2");
@@ -493,7 +497,7 @@ $(function () {
     // setup plot
     function getData() {
         var d = [];
-        for (var i = 0; i < theElements.length; ++i) {
+        for (var i = 1; i < theElements.length; ++i) {
             d.push([i, theElements[i].contentCount]);
         }
  
@@ -558,8 +562,8 @@ $(function () {
             
 			unHighlightAllChildren();
 			handleDeselection();
-			selectedNodes.push(item.dataIndex);
-			highlightChildren(item.dataIndex);
+			selectedNodes.push(item.dataIndex+1);
+			highlightChildren(item.dataIndex+1);
 			highlightSelectedNodes();
 			
             //plot.highlight(item.series, item.datapoint);
@@ -629,13 +633,14 @@ function select()
 	{
 		if(theElements[i].name == tf.value)
 		{
-			aList.options[i].selected = true;
+			aList.options[i-1].selected = true;
 						
 			var newoptn = document.createElement("OPTION");
 			newoptn.text = tf.value;
 			newoptn.ind = i;
 			sList.options.add(newoptn);	
 			selectedNodes.push(i);
+			highlightChildren(i);
 			highlightSelectedNodes();
 		}
 	}
@@ -732,6 +737,103 @@ function fullscreen2()
 		zoomPanel.style.top = new_ypos;
 }
 
+function showDetails()
+{
+
+	var theSelectedList = document.getElementById('selectedList');
+	var debTA  = document.getElementById(debuggingTextAreaID);
+	var theInnerHTML ="</br><b><center>Details of the selected nodes</center></b></br><hr>";
+	
+		
+	for(var i=0;i<theSelectedList.options.length;i++)
+	{
+		//if(theSelectedList.options[i].selected == true)
+		//{
+			theInnerHTML+=  "</br><b> Regulon Name : " 		+ theElements[theSelectedList.options[i].ind].name 			+  "</b></br></br>";
+			
+			theInnerHTML+= 	"<table width=\"100%\" border = 1>"+
+							"<tr style=\" background-color:#AAAAAA\"><th>Property</th><th>Value</th></tr>";
+			theInnerHTML+=  "<tr><td>Description</td><td>"  		+ theElements[theSelectedList.options[i].ind].description 	+  "</td></tr>";
+			theInnerHTML+=  "<tr><td>Genes contained</td><td>" 		+ theElements[theSelectedList.options[i].ind].contentCount 	+  "</td></tr>";
+			
+			var neighbors = adjacencyList[theSelectedList.options[i].ind];
+			theInnerHTML+=  "<tr><td>Number of Neighbors</td><td>" 	+ neighbors.length 											+  "</td></tr>";
+			
+			theInnerHTML+=  "<tr><td>Neighboring Regulons</td><td>";
+			for(var j=0;j<neighbors.length;j++)
+			{
+				theInnerHTML += ""+ theElements[neighbors[j]].name;
+				if(j<neighbors.length-1)theInnerHTML += ", ";
+			}
+			theInnerHTML += "</td></tr>";
+			theInnerHTML += "</table></br><hr>";
+		//}
+		
+	}
+	
+	
+		
+	/*var sdID = document.getElementById("viewChartID");
+
+	if(details_shown==false)
+	{
+		details_shown = true;
+		if(detailsWin==undefined)
+		{*/
+			detailsWin = new GWindow(null,"Details Window");
+			detailsWin.setDockable(false);
+			detailsWin.dock(false);
+			detailsWin.showIcon(false);
+			detailsWin.setSize(600,350,GWindow.UNDOCKED);
+			detailsWin.setClosable(true,GWindow.UNDOCKED);
+			
+			detailsWin.getBodyElement().innerHTML = theInnerHTML;
+			
+		/*}
+		else
+		{
+			detailsWin.show(true);
+		}
+		
+		sdID.innerHTML = "Hide Details";
+	}
+	else
+	{
+		detailsWin.show(false);
+		details_shown = false;
+		
+		sdID.innerHTML = "Show Details";
+	}*/
+}
+
+function showDetails_GO()
+{
+
+	var theSelectedList = document.getElementById('selectedList_GO');
+	var debTA  = document.getElementById(debuggingTextAreaID);
+	var theInnerHTML ="</br><b><center>Details of the selected GO terms</center></b></br><hr>";
+	
+		
+	for(var i=0;i<theSelectedList.options.length;i++)
+	{
+		theInnerHTML+=  "</br><b> GO Term Name : " 		+ elements_I[theSelectedList.options[i].ind].name 			+  "</b></br></br>";
+		
+		theInnerHTML+= 	"<table width=\"100%\" border = 1>"+
+						"<tr style=\" background-color:#AAAAAA\"><th>Property</th><th>Value</th></tr>";
+		theInnerHTML+=  "<tr><td>Description</td><td>"  		+ elements_I[theSelectedList.options[i].ind].description 	+  "</td></tr>";
+		
+		theInnerHTML += "</table></br><hr>";
+	}
+		
+	detailsWin = new GWindow(null,"Details Window");
+	detailsWin.setDockable(false);
+	detailsWin.dock(false);
+	detailsWin.showIcon(false);
+	detailsWin.setSize(600,350,GWindow.UNDOCKED);
+	detailsWin.setClosable(true,GWindow.UNDOCKED);
+	detailsWin.getBodyElement().innerHTML = theInnerHTML;
+}
+
 function viewChart() {
 
 	var vcID = document.getElementById("viewChartID");
@@ -786,6 +888,8 @@ function toggleLegends()
 	}
 }
 
+
+
 </script>
 
 <!-- Visualization Mode -->
@@ -804,7 +908,7 @@ function toggleLegends()
 <body onload="init(); init_H(); ">
 
 	<!-- -->
-	<div id="menudiv" style="position:absolute; display:none; top:50px; left:50px;z-index:10000;" onmouseover="javascript:overpopupmenu=true;" onmouseout="javascript:overpopupmenu=false;">
+	<!--div id="menudiv" style="position:absolute; display:none; top:50px; left:50px;z-index:10000;" onmouseover="javascript:overpopupmenu=true;" onmouseout="javascript:overpopupmenu=false;">
 		<table width=82 cellspacing=1 cellpadding=0>
 		  <tr><td>
 			<table width=80 cellspacing=0 cellpadding=0>
@@ -815,7 +919,7 @@ function toggleLegends()
 			</table>
 		  </td></tr>
 		</table>
-	</div>
+	</div-->
 	
 	<div id="loading" style="display:block;">
 		<div style="background-color:gray;border: 1px solid #000;color:white;width:100%;opacity:0.4;z-index:5000;position:absolute;top:0px;left:0px;height:100%;"></div>	
@@ -868,9 +972,9 @@ function toggleLegends()
 		<div>
 		
 			<div id="omw_scrollpane_H">
-				<canvas id="MyCanvass2" width="10000px" height="500px"  style="z-index: 7; position:absolute; left:0px; top:0px;"></canvas>	    
-				<!--canvas id="MyCanvass1" width="10000px" height="500px"  style="z-index: 6; position:absolute; left:0px; top:0px;"></canvas-->	    
-				<canvas id="myCanvass" width="10000px" height="500px"   style="z-index: 5; position:absolute; left:0px; top:0px;">ur browser doesnt support canvas element.. do something!Now!</canvas>
+				<canvas id="MyCanvass2" width="1200px" height="500px"  style="z-index: 7; position:absolute; left:0px; top:0px;"></canvas>	    
+				<!--canvas id="MyCanvass1" width="1200px" height="500px"  style="z-index: 6; position:absolute; left:0px; top:0px;"></canvas-->	    
+				<canvas id="myCanvass" width="1200px" height="500px"   style="z-index: 5; position:absolute; left:0px; top:0px;">ur browser doesnt support canvas element.. do something!Now!</canvas>
 			</div>
 			
 			<div id="zoom_panel2">
@@ -924,7 +1028,7 @@ function toggleLegends()
 				
 								
 				<tr>
-				<td colspan=2><center><input type = "button" value= "Remove" onclick="removeSelected();"></input><input type = "button" value= "View Details" onclick= "viewDetails();"></input><input type = "button" value= "View Genes" onclick="viewGenes()"></input></center></td>
+				<td colspan=2><center><input type = "button" value= "Remove" onclick="removeSelected();"></input><input type = "button" value= "View Details" onclick= "showDetails();"></input><input type = "button" value= "View Genes" onclick="viewGenes()"></input></center></td>
 				</tr>
 				</table>
 			</div>
@@ -953,19 +1057,24 @@ function toggleLegends()
 				</tr>
 				
 				<tr>
-				<td><center><select id="allList_GO" size=5 multiple ></select></center></td>
+				<td>
+					<center>
+						<select id="allList_GO" size=5 multiple ></select> <br>
+						page: <select id="pageno" size=1 ></select>
+					</center>
+				</td>
 				<td><center><select id="selectedList_GO" size=5 multiple ></select></center></td>
 				</tr>
 				
 				<tr>
-				<td colspan=2><center><input type = "button" value= "Remove" onclick="removeSelected2();"></input><input type = "button" value= "View Details" onclick= "viewDetails2();"></input></center></td>
+				<td colspan=2><center><input type = "button" value= "Remove" onclick="removeSelected2();"></input><input type = "button" value= "View Details" onclick= "showDetails_GO();"></input></center></td>
 				</tr>
 				</table>
 			</div>
 		</div>
 		
 		
-		<div style="border: 1px solid #000; padding: 0px; background: #EEEEEE; ">
+		<div style="border: 1px solid #000; padding: 0px; background: #EEEEEE; display: none">
 			<table border="0" cellspacing="0" cellpadding="2" width="100%" style="background: #000000; color: #FFFFFF; ">
 				<tr>
 					<td>Details</td>
@@ -1006,8 +1115,27 @@ function toggleLegends()
 		<script language="javascript">toggle(getObject('levelEditing_link'), 'levelEditing');</script>
 		
 		
+		
 	</div>
 	
+	<div id="menudiv" style="position:absolute; display:none; top:0px; left:0px;z-index:10000;" onmouseover="javascript:overpopupmenu=true;" onmouseout="javascript:overpopupmenu=false;">
+			<table width=112 cellspacing=1 cellpadding=0 bgcolor=lightgray>
+			  <tr><td>
+				<table width=110 cellspacing=0 cellpadding=0 border=1>
+
+				  <tr>
+					<td id="item1" bgcolor="#FFFFFF" width="110" height="16" onMouseOver="this.style.backgroundColor='#EFEFEF'" onMouseOut="this.style.backgroundColor='#FFFFFF'">  <a href="#" onclick="document.getElementById('menudiv').style.display='none';">View Genes</a></td>
+				  </tr>
+				  
+				  <tr>
+					<td id="item2" bgcolor="#FFFFFF" width="110" height="16" onMouseOver="this.style.backgroundColor='#EFEFEF'" onMouseOut="this.style.backgroundColor='#FFFFFF'" onclick="showDetails();document.getElementById('menudiv').style.display='none';">  <a href="#">View Details</a></td>
+				  </tr>
+				  
+				  
+				</table>
+			  </td></tr>
+			</table>
+	</div>
 	<!-- -->
 	
 	

@@ -19,6 +19,8 @@
  // holds the elements_I present in each level
  var levelElements_I = new Array();
  
+ var levelElements_I_orig = new Array();
+ 
  // adjacencyList is a 2D array . 
  // Rows indicate the different elements_I
  // columns indicate the neighbors of the elements_I
@@ -75,6 +77,32 @@
 	}
  }
  
+ function levelUp()
+ {
+	var currentRootElement = levelElements_I[0][0];
+	if(currentRootElement ==0) return;
+	
+	var context=canvas_I.getContext("2d");
+ 	context.clearRect(0,0,canvas_I.width,canvas_I.height);
+	clearOldData();
+	
+	var parent = elements_I[currentRootElement].parent;
+	levelElements_I = [];
+	
+	MAX_DEPTH += 1;
+	
+	LEVEL_HEIGHT = canvas_I.height/MAX_DEPTH;
+	
+	elements_I[parent].X = 0;
+	elements_I[parent].Y = 0;
+	elements_I[parent].WIDTH = canvas_I.width;
+	
+	drawLevels_I(parent,0,0,LEVEL_HEIGHT,canvas_I.width,0);
+	
+	highlightSelectedNodes_I();
+
+ }
+ 
  function drawTheChart_I(theCanvasID,selectionCanvasID,theElements,theChildren,theDebuggingTextAreaID)
  {
 	canvas_I  = document.getElementById(theCanvasID);
@@ -83,14 +111,64 @@
 	
 	drawChart_I();
 	
+	levelElements_I_orig = levelElements_I;
+	
+	canvas2_I.oncontextmenu = function()
+	{
+		levelUp();
+		return false;
+	};
 	canvas2_I.addEventListener("dblclick", handleDblClick_I,false);
 	canvas2_I.addEventListener("click", handleMouseClick_I);
 	document.getElementById("zoomin_I").addEventListener("click",handleZoomIn_I);
 	document.getElementById("zoomout_I").addEventListener("click",handleZoomOut_I);
 }
  
- function handleDblClick_I()
+ function handleDblClick_I(evt)
  {
+		
+	var context=canvas_I.getContext("2d");
+	
+	var x, y;
+
+    // Get the mouse position relative to the canvas_I element.
+    if (evt.layerX || evt.layerX == 0) { // Firefox
+      x = evt.layerX;
+      y = evt.layerY;
+    } else if (evt.offsetX || evt.offsetX == 0) { // Opera
+      x = evt.offsetX;
+      y = evt.offsetY;
+    }
+		
+	var levelAt = determineLevel_I(y);
+	var levelContents = levelElements_I[levelAt];
+	
+	for(var i=0;i<levelContents.length;i++)
+	{
+		var regionOfElement = new Object();
+		regionOfElement.x = elements_I[levelContents[i]].X;
+		regionOfElement.y = elements_I[levelContents[i]].Y;
+		regionOfElement.width = elements_I[levelContents[i]].WIDTH;
+		regionOfElement.height = LEVEL_HEIGHT;
+		
+		if(fallInRegion(regionOfElement,x,y))
+		{
+			context.clearRect(0,0,canvas_I.width,canvas_I.height);
+			clearOldData();
+			levelElements_I = [];
+			MAX_DEPTH -= levelAt;
+			
+			LEVEL_HEIGHT = canvas_I.height/MAX_DEPTH;
+			
+			elements_I[levelContents[i]].X = 0;
+			elements_I[levelContents[i]].Y = 0;
+			elements_I[levelContents[i]].WIDTH = canvas_I.width;
+			
+			drawLevels_I(levelContents[i],0,0,LEVEL_HEIGHT,canvas_I.width,0);
+			
+			highlightSelectedNodes_I();
+		}
+	}
 	
  }
  
@@ -104,8 +182,20 @@
  
  function redrawChart_I()
  {
+	var context=canvas_I.getContext("2d");
+	context.clearRect(0,0,canvas_I.width,canvas_I.height);
 	clearOldData();
-	drawChart_I();
+	
+	currentRootIndex = levelElements_I[0][0];
+	
+	levelElements_I = [];
+	
+	elements_I[currentRootIndex].X = 0;
+	elements_I[currentRootIndex].Y = 0;
+	elements_I[currentRootIndex].WIDTH = canvas_I.width;
+	
+	drawLevels_I(currentRootIndex,0,0,LEVEL_HEIGHT,canvas_I.width,0);
+	
 	highlightSelectedNodes_I();
  }
  
@@ -139,6 +229,7 @@
 	elements_I[0].X = 0;
 	elements_I[0].Y = 0;
 	elements_I[0].WIDTH = canvas_I.width;
+	elements_I[0].parent = 0;
 	
 	drawLevels_I(0,0,0,LEVEL_HEIGHT,canvas_I.width,0);
  }
@@ -191,7 +282,10 @@
 				elements_I[listOfChildren[i]].X = x;
 				elements_I[listOfChildren[i]].Y = top + LEVEL_HEIGHT;
 				elements_I[listOfChildren[i]].WIDTH = widthOfThisElement;
-				
+				if(elements_I[listOfChildren[i]].parent == undefined)
+				{
+					elements_I[listOfChildren[i]].parent = index;
+				}
 				
 				if(i == listOfChildren.length-1)
 				drawLevels_I(listOfChildren[i],x,top + LEVEL_HEIGHT,bottom + LEVEL_HEIGHT,right,depth+1);

@@ -117,6 +117,66 @@
 	debTA.value = debTA.value +debugText;
  }
  
+ function drawUnclassifiedNodes()
+ {
+	var context=canvas.getContext("2d");
+	
+	context.lineWidth=1;
+	context.strokeStyle="black"; // line color
+	context.fillStyle="lightgray"; // line color
+	context.fillRect(canvas.width-175, canvas.height-50 , 135, 25);
+	context.strokeRect(canvas.width-175, canvas.height-50 , 135, 25);
+	
+	context.fillStyle="black"; // line color
+	context.font = "bold 10px sans-serif";
+	context.fillText("Unclassified Node : Reg0", canvas.width-170, canvas.height-35);
+ }
+ 
+var ie  = document.all
+var ns6 = document.getElementById&&!document.all
+var isMenu  = false ;
+var menuSelObj = null ;
+var overpopupmenu = false;
+
+function mouseSelect(e)
+{
+  var obj = ns6 ? e.target.parentNode : event.srcElement.parentElement;
+  if( isMenu )
+  {
+    if( overpopupmenu == false )
+    {
+      isMenu = false ;
+      overpopupmenu = false;
+      document.getElementById('menudiv').style.display = "none" ;
+      return true ;
+    }
+    return true ;
+  }
+  return false;
+}
+
+// POP UP MENU
+function  showContextMenu(e)
+{  
+
+  var obj = ns6 ? e.target.parentNode : event.srcElement.parentElement; 
+      menuSelObj = obj ;
+  if (ns6)
+  {
+    document.getElementById('menudiv').style.left = e.clientX+document.body.scrollLeft+"px";
+    document.getElementById('menudiv').style.top = e.clientY+document.body.scrollTop+"px";
+  } else
+  {
+    document.getElementById('menudiv').style.pixelLeft = event.clientX+document.body.scrollLeft;
+    document.getElementById('menudiv').style.pixelTop = event.clientY+document.body.scrollTop;
+  }
+  document.getElementById('menudiv').style.display = "";
+  document.getElementById('item1').style.backgroundColor='#FFFFFF';
+  document.getElementById('item2').style.backgroundColor='#FFFFFF';
+  isMenu = true;
+  return false ;
+}
+   
  function drawTheChart(theCanvasID,selectionCanvasID,TheLevelRanges,theElements,theAdjacencyList,theDebuggingTextAreaID,mode)
  {
 	
@@ -136,10 +196,12 @@
 	
 	drawChart();
 	
+	drawUnclassifiedNodes();
+	
+	canvas2.oncontextmenu = showContextMenu;
 	canvas2.addEventListener("click", handleMouseClick);
 	document.getElementById("zoomin").addEventListener("click",handleZoomIn);
 	document.getElementById("zoomout").addEventListener("click",handleZoomOut);
-		
  }
  
  function redrawChart()
@@ -293,7 +355,7 @@ function handleMouseClick(evt) {
 	
 	var debTA  = document.getElementById(debuggingTextAreaID);
 		
-	var context=canvas.getContext("2d");
+	var context=canvas.getContext("2d")
 	
 	var x, y;
 

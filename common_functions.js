@@ -268,6 +268,7 @@ function highlightSelectedNodes_I()
 	var debText = "\nSelected Nodes:";
 	for(var i=0;i<selectedNodes_I.length;i++)
 	{
+		if(elements_I[selectedNodes_I[i]].X == undefined) continue;
 		debText+=selectedNodes_I[i]+" ";
 		drawRect(canvas_I,elements_I[selectedNodes_I[i]].X,elements_I[selectedNodes_I[i]].Y,elements_I[selectedNodes_I[i]].WIDTH,LEVEL_HEIGHT,"#FF0000","black");
 	}

@@ -1,25 +1,55 @@
 function handleMouseDown(evt)
  {
-	if(!evt.ctrlKey)
+	if(evt.button != 2)
 	{
-		handleDeselection();	
+		if( isMenu )
+		{
+			var obj = ns6 ? evt.target.parentNode : event.srcElement.parentElement;
+			if( overpopupmenu == false )
+			{
+				isMenu = false ;
+				overpopupmenu = false;
+				document.getElementById('menudiv').style.display = "none" ;
+
+				if(!evt.ctrlKey)
+				{
+					handleDeselection();	
+				}
+				var scrollbar = document.getElementById("omw_scrollpane");
+				isDown = true;
+				startX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
+				startY = OFFSETY + scrollbar.scrollTop + evt.clientY;
+
+				return true ;
+			}
+			return true ;
+		}
+		else
+		{
+			if(!evt.ctrlKey)
+			{
+				handleDeselection();	
+			}
+			
+			var scrollbar = document.getElementById("omw_scrollpane");
+			isDown = true;
+			startX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
+			startY = OFFSETY + scrollbar.scrollTop + evt.clientY;
+		}
 	}
-	
-	var scrollbar = document.getElementById("omw_scrollpane");
-	
-	isDown = true;
-	startX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
-	startY = OFFSETY + scrollbar.scrollTop + evt.clientY;
  }
  
  function handleMouseUp(evt)
  {
- 	var scrollbar = document.getElementById("omw_scrollpane");
-	
-	endX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
-	endY = OFFSETY + scrollbar.scrollTop + evt.clientY;
-	isDown = false;
-	handleSelection(startX,startY,endX,endY);
+	if(evt.button!=2)
+	{
+		var scrollbar = document.getElementById("omw_scrollpane");
+		
+		endX = OFFSETX + scrollbar.scrollLeft + evt.clientX;
+		endY = OFFSETY + scrollbar.scrollTop + evt.clientY;
+		isDown = false;
+		handleSelection(startX,startY,endX,endY);
+	}
  }
  
 

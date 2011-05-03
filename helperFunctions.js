@@ -4,7 +4,7 @@
 	var aList = document.getElementById("allList");
 	while(sList.options.length>0)
 	{
-		aList.options[sList.options[0].ind].selected = false;
+		aList.options[sList.options[0].ind - 1].selected = false;
 		sList.options.remove(0);
 	}
  }
