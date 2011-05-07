@@ -34,6 +34,18 @@ function handleSelection(startX,startY,endX,endY)
  
  function handleDeselection()
  {
+ 
+	ctx = canvas1.getContext("2d");
+	ctx.clearRect(0,0,canvas1.width,canvas1.height);
+	
+	ctx = canvas2.getContext("2d");
+	ctx.clearRect(0,0,canvas2.width,canvas2.height);
+	
+	ctx = canvas3.getContext("2d");
+	ctx.clearRect(0,0,canvas3.width,canvas3.height);
+	
+	unHighlightAllChildren();
+	
 	if(selectedNodes.length>0)
 	{
 		for(var i=0;i<selectedNodes.length;i++)
@@ -53,6 +65,8 @@ function handleSelection(startX,startY,endX,endY)
 	canvas1.height+=20;
 	canvas2.width+=20;
 	canvas2.height+=20;
+	canvas3.width+=20;
+	canvas3.height+=20;
 	
 	redrawChart();
 	
@@ -68,6 +82,8 @@ function handleSelection(startX,startY,endX,endY)
 	canvas1.height-=20;
 	canvas2.width-=20;
 	canvas2.height-=20;
+	canvas3.width-=20;
+	canvas3.height-=20;
 	
 	redrawChart();
 	

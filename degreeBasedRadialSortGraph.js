@@ -183,7 +183,8 @@ function  showContextMenu(e)
 	canvasID = theCanvasID;
 	canvas  = document.getElementById(canvasID);
 	canvas1 = document.getElementById("MyCanvas1");
-	canvas2 = document.getElementById(selectionCanvasID);
+	canvas2 = document.getElementById("MyCanvas2");
+	canvas3 = document.getElementById("MyCanvas3");
 	theMode = mode;
 	
 	levelRanges = TheLevelRanges;
@@ -321,7 +322,7 @@ function  showContextMenu(e)
 		
 		insertIntoOctTree(levelElements[index][i],x+centerX,y+centerY,0);
 		
-		drawCircle(canvas,RADIUS_OF_CIRCLES,x+centerX,y+centerY,"#33FF00");
+		drawCircle(canvas,RADIUS_OF_CIRCLES,x+centerX,y+centerY,"#33FF00");//,theElements[levelElements[index][i]].name);
 		
 		initDegree+=degree;
 	}
@@ -351,6 +352,9 @@ function  showContextMenu(e)
  
 function handleMouseClick(evt) {
 
+	ctx = canvas3.getContext("2d");
+	ctx.clearRect(0,0,canvas3.width,canvas3.height);
+	
 	unHighlightAllChildren();
 	
 	var debTA  = document.getElementById(debuggingTextAreaID);
@@ -471,20 +475,11 @@ function highlightChild(index)
 	var x = theElements[index].X;
 	var y = theElements[index].Y;
 	
-	var ctx = canvas.getContext("2d");
-	ctx.lineWidth = 3;
-	ctx.strokeStyle = "blue";
-	ctx.fillStyle = "#33FF00";
-	//draw a circle
-	ctx.beginPath();
-	ctx.arc(x, y, RADIUS_OF_CIRCLES, 0, Math.PI*2, true); 
-	ctx.closePath();
-	ctx.fill();
-	ctx.stroke();
+	drawCircle(canvas,RADIUS_OF_CIRCLES,x,y,"#33FF00",theElements[index].name,"blue",3)
 	
+	ctx = canvas.getContext("2d");
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "black";
-	
 }
 
 function unHighlightChild(index)
@@ -492,24 +487,6 @@ function unHighlightChild(index)
 	var x = theElements[index].X;
 	var y = theElements[index].Y;
 	
-	var ctx = canvas.getContext("2d");
-	ctx.lineWidth = 3;
-	ctx.strokeStyle = "white";
-	ctx.fillStyle = "white";
-	//draw a circle
-	ctx.beginPath();
-	ctx.arc(x, y, RADIUS_OF_CIRCLES, 0, Math.PI*2, true); 
-	ctx.closePath();
-	ctx.fill();
-	ctx.stroke();
-	
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = "black";
-	ctx.fillStyle = "#33FF00";
-	//draw a circle
-	ctx.beginPath();
-	ctx.arc(x, y, RADIUS_OF_CIRCLES, 0, Math.PI*2, true); 
-	ctx.closePath();
-	ctx.fill();
-	ctx.stroke();
+	drawCircle(canvas,RADIUS_OF_CIRCLES,x,y,"#33FF00","","white",3);
+	drawCircle(canvas,RADIUS_OF_CIRCLES,x,y,"#33FF00","","black",1);
 }

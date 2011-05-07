@@ -151,10 +151,17 @@
 	//ctx.fill();
  }
  
- function drawCircle(theCanvas,circleRadius,x,y,rgb)
+ function drawCircle(theCanvas,circleRadius,x,y,rgb,text,strokeColor,lineWidth)
  {
+ 
+	text = typeof(text) != 'undefined' ? text : "";
+	strokeColor = typeof(strokeColor) != 'undefined' ? strokeColor : "black";
+	lineWidth = typeof(lineWidth) != 'undefined' ? lineWidth : 1;
+	
 	var ctx = theCanvas.getContext("2d");
 
+	ctx.strokeStyle = strokeColor;
+	ctx.lineWidth = lineWidth;
 	ctx.fillStyle = rgb;
 	//draw a circle
 	ctx.beginPath();
@@ -162,6 +169,22 @@
 	ctx.closePath();
 	ctx.fill();
 	ctx.stroke();
+	
+	/*if(text.indexOf("RegID") != -1)
+	{
+		text = text.substr(5);
+	}*/
+	if(text!="")
+	{
+		ctx = canvas3.getContext("2d");
+		
+		drawRect(canvas3,x + circleRadius,y + circleRadius/4,60,20,"#eee","black");
+		
+		ctx.fillStyle    = '#000';
+		ctx.font         = 'italic 10px';
+		ctx.textBaseline = 'top';
+		ctx.fillText(text,x + circleRadius + 5,y + circleRadius/4 + 2);
+	}
  }
  
  function alreadySelected(i,selNodes)
@@ -209,7 +232,7 @@
 		for(var i=0;i<selectedNodes.length;i++)
 		{
 			debText+=selectedNodes[i]+" ";
-			drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[selectedNodes[i]].X,theElements[selectedNodes[i]].Y,"#FF0000");
+			drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[selectedNodes[i]].X,theElements[selectedNodes[i]].Y,"#FF0000",theElements[selectedNodes[i]].name);
 		}
 		debText+="\n";
 		debTA.value = debText;
@@ -242,7 +265,7 @@ function highlightSelectedNodes_H()
 		for(var i=0;i<selectedNodes_H.length;i++)
 		{
 			debText+=selectedNodes_H[i]+" ";
-			drawCircle(canvas_H,RADIUS_OF_CIRCLES_H,elements_H[selectedNodes_H[i]].X,elements_H[selectedNodes_H[i]].Y,"#FF0000");
+			drawCircle(canvas_H,RADIUS_OF_CIRCLES_H,elements_H[selectedNodes_H[i]].X,elements_H[selectedNodes_H[i]].Y,"#FF0000",elements_H[selectedNodes_H[i]].name);
 		}
 		debText+="\n";
 		debTA.value = debText;
@@ -264,21 +287,76 @@ function deselectNode_H(i)	// this 'i' refers to the index in the theElements ar
 
 function highlightSelectedNodes_I()
  {
-	var debTA  = document.getElementById(debuggingTextAreaID_I);
+	
+	var sList = document.getElementById("selectedList_GO");
+	var aList = document.getElementById("allList_GO");
+	var pageno = document.getElementById("pageno");
+	
+	clearSelectedList_I();
+	
+	var debTA  = document.getElementById(debuggingTextAreaID);
 	var debText = "\nSelected Nodes:";
 	for(var i=0;i<selectedNodes_I.length;i++)
 	{
 		if(elements_I[selectedNodes_I[i]].X == undefined) continue;
-		debText+=selectedNodes_I[i]+" ";
+		debText+=selectedNodes[i]+" ";
+		
 		drawRect(canvas_I,elements_I[selectedNodes_I[i]].X,elements_I[selectedNodes_I[i]].Y,elements_I[selectedNodes_I[i]].WIDTH,LEVEL_HEIGHT,"#FF0000","black");
+		
+		var left = elements_I[selectedNodes_I[i]].X;
+		var top = elements_I[selectedNodes_I[i]].Y;
+		var width = elements_I[selectedNodes_I[i]].WIDTH;
+		var height = LEVEL_HEIGHT;
+		
+		if(width>70)
+		{
+			drawRect(canvas_I,(left+width/2)-35,top+height/2-10,70,20,"#eee","black");
+			
+			ctx.fillStyle    = '#000';
+			ctx.font         = 'italic 10px';
+			ctx.textBaseline = 'top';
+			
+			ctx.fillText(elements_I[selectedNodes_I[i]].name,(left+width/2)-30,top+height/2-5);
+		}
+		
+		var newoptn = document.createElement("OPTION");
+		newoptn.text = elements_I[selectedNodes_I[i]].name;
+		newoptn.ind = selectedNodes_I[i]; // corresponds to the index in the alllist_GO
+		sList.options.add(newoptn);	
+		
+		
+		page = Math.ceil(selectedNodes_I[i]/COUNTINPAGE);
+		
+		if(selectedNodes_I[i]%COUNTINPAGE == 0)	page++;
+		
+		if(pageno.options[pageno.selectedIndex].text == page)
+			aList.options[(selectedNodes_I[i]%COUNTINPAGE)].selected = true;
+		highlightChildren_I(selectedNodes_I[i]);
 	}
 	debText+="\n";
 	debTA.value = debText;
+	
  }
   
 function deselectNode_I(i)	// this 'i' refers to the index in the theElements array
 {
 	drawRect(canvas_I,elements_I[i].X,elements_I[i].Y,elements_I[i].WIDTH,LEVEL_HEIGHT,"#33FF00","black");
+	
+	var width = elements_I[i].WIDTH;
+	var left = elements_I[i].X;
+	var top = elements_I[i].Y;
+	var height = LEVEL_HEIGHT;
+	
+	if(width>70)
+	{
+		drawRect(canvas_I,(left+width/2)-35,top+height/2-10,70,20,"#eee","black");
+		
+		ctx.fillStyle    = '#000';
+		ctx.font         = 'italic 10px';
+		ctx.textBaseline = 'top';
+		
+		ctx.fillText(elements_I[i].name,(left+width/2)-30,top+height/2-5);
+	}
 	
 	for(var j=0;j<selectedNodes_I.length;j++)
 	{
@@ -287,5 +365,5 @@ function deselectNode_I(i)	// this 'i' refers to the index in the theElements ar
 			selectedNodes_I.splice(j,1);
 		}
 	}
-	//highlightSelectedNodes_I();
+	highlightSelectedNodes_I();
 }

@@ -9,6 +9,18 @@
 	}
  }
  
+ function clearSelectedList_I()
+ {
+	var sList = document.getElementById("selectedList_GO");
+	var aList = document.getElementById("allList_GO");
+	while(sList.options.length>0)
+	{
+		if(aList.options[sList.options[0].ind % COUNTINPAGE])
+			aList.options[sList.options[0].ind % COUNTINPAGE].selected = false;
+		sList.options.remove(0);
+	}
+ }
+ 
  function parseStringToNumberArray( theString)
  {
 		var stringArray = theString;
@@ -60,6 +72,7 @@
 	var canvas = document.getElementById('myCanvas');
 	var canvas1 = document.getElementById('MyCanvas1');
 	var canvas2 = document.getElementById('MyCanvas2');
+	var canvas3 = document.getElementById('MyCanvas3');
 	var ctx = canvas.getContext("2d");
 	var ctx1 = canvas1.getContext("2d");
 	var ctx2 = canvas2.getContext("2d");
@@ -154,17 +167,7 @@ function changeThreshold()
 function fillChildren(parentIndex,index_in_cList,level)
 {
 	var childArray = childrenList_H_2[parentIndex];
-	
-	/*if(childArray.length == 0) 				// when a node has no children ... 
-	{
-		if(childrenList_H[index_in_cList] == undefined) 
-		{
-			childrenList_H[index_in_cList] = new Array();
-		}
-		return;
-	}*/
-
-	
+		
 	for(var i=0;i<childArray.length;i++)
 	{
 		var flag = false;
@@ -188,7 +191,24 @@ function fillChildren(parentIndex,index_in_cList,level)
 		if(elements_In_Children[level] == undefined || elements_In_Children[level][childArray[i]] == undefined)
 		{
 			if(elements_In_Children[level] == undefined) elements_In_Children[level] = new Array();
-			elements_I[index] = {"name":elementstemp[childArray[i]],"description":"","index":childArray[i]};
+			
+			var alias = "";
+			var desc = "";
+			var ind = entireListOfGOsHash[""+elementstemp[childArray[i]]];
+			
+			if(ind != undefined)
+			{
+				alias = ""+elementsDesc[ind].name;
+				desc =  ""+elementsDesc[ind].description;
+			}
+			
+			elements_I[index] = {"name":elementstemp[childArray[i]],"description":""+desc,"index":childArray[i],"alias":""+alias,"depth":""+(level+1)};
+			
+		/*	var debTA  = document.getElementById("LogTA");
+			var debugText = "";
+			debugText += "Name: " + elementstemp[childArray[i]] + ",alias: " + alias + ",depth: " + (level+1) + "\n";
+			debTA.value = debTA.value + debugText;
+			*/
 			elements_In_Children[level][childArray[i]] = index;
 			if(childrenList_I[index_in_cList] == undefined) childrenList_I[index_in_cList] = new Array();
 			childrenList_I[index_in_cList].push(index);

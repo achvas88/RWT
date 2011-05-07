@@ -5,6 +5,8 @@ function selectionAction(optn,ctrl)
    
    if(!ctrl)
    {
+		handleDeselection();
+		
    		while(theSelectedList.options.length>0)
 		{
 			theSelectedList.options.remove(0);
@@ -14,7 +16,6 @@ function selectionAction(optn,ctrl)
 		newoptn.text = optn.text;
 		newoptn.ind = optn.ind; // corresponds to the index in the alllist and the theElements array
 		theSelectedList.options.add(newoptn);
-		handleDeselection();
 		selectedNodes.push(optn.ind);
 		highlightChildren(optn.ind);
 		highlightSelectedNodes();
@@ -46,16 +47,23 @@ function selectionAction(optn,ctrl)
 	}	
 	else // if unselected
 	{
+		handleDeselection();
 		//check if in selected 
 		for(var i=0;i<theSelectedList.options.length;i++)
 		{
 			if(theSelectedList.options[i].text == optn.text)	// if yes remove it
 			{
-				deselectNode(theSelectedList.options[i].ind);
+				//deselectNode(theSelectedList.options[i].ind);
 				theSelectedList.options.remove(i);
-				break;
+				i--;
+			}
+			else
+			{
+				selectedNodes.push(theSelectedList.options[i].ind);
+				highlightChildren(theSelectedList.options[i].ind);
 			}
 		}
+		highlightSelectedNodes();
 	}
 }
 
@@ -66,7 +74,7 @@ function selectionAction_H(optn,ctrl)
    
    if(!ctrl)
    {
-   		while(theSelectedList.options.length>0)
+   		/*while(theSelectedList.options.length>0)
 		{
 			theSelectedList.options.remove(0);
 		}
@@ -75,6 +83,7 @@ function selectionAction_H(optn,ctrl)
 		newoptn.text = optn.text;
 		newoptn.ind = optn.ind; // corresponds to the index in the alllist and the theElements array
 		theSelectedList.options.add(newoptn);
+		*/
 		handleDeselection_I();
 		selectedNodes_I.push(optn.ind);
 		//highlightChildren_I(optn.ind);
@@ -234,7 +243,7 @@ function removeSelected()
 		if(sbox.options[i].selected) 
 		{
 			abox.options[sbox.options[i].ind - 1].selected = false;
-			drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[sbox.options[i].ind].X,theElements[sbox.options[i].ind].Y,"#33FF00");
+			drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[sbox.options[i].ind].X,theElements[sbox.options[i].ind].Y,"#33FF00",theElements[sbox.options[i].ind].name);
 			for(var j=0;j<selectedNodes.length;j++)
 			{
 				if(selectedNodes[j] == sbox.options[i].ind)

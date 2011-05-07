@@ -34,12 +34,30 @@ function handleSelection_I(startX,startY,endX,endY)
  
  function handleDeselection_I()
  {
+	unHighlightAllChildren_I();
+	
 	if(selectedNodes_I.length>0)
 	{
 		for(var i=0;i<selectedNodes_I.length;i++)
 		{
 			//drawCircle(canvas_I,RADIUS_OF_CIRCLES_I,elements_I[selectedNodes_I[i]].X,elements_I[selectedNodes_I[i]].Y,"#33FF00");
 			drawRect(canvas_I,elements_I[selectedNodes_I[i]].X, elements_I[selectedNodes_I[i]].Y,elements_I[selectedNodes_I[i]].WIDTH,LEVEL_HEIGHT,"#33FF00","black");
+			
+			var left = elements_I[selectedNodes_I[i]].X;
+			var top = elements_I[selectedNodes_I[i]].Y;
+			var width = elements_I[selectedNodes_I[i]].WIDTH;
+			var height = LEVEL_HEIGHT;
+			
+			if(width>70)
+			{
+				drawRect(canvas_I,(left+width/2)-35,top+height/2-10,70,20,"#eee","black");
+				
+				ctx.fillStyle    = '#000';
+				ctx.font         = 'italic 10px';
+				ctx.textBaseline = 'top';
+				
+				ctx.fillText(elements_I[selectedNodes_I[i]].name,(left+width/2)-30,top+height/2-5);
+			}
 		}
 		selectedNodes_I = [];
 	}

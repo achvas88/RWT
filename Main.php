@@ -137,7 +137,7 @@
  var elements_In_Children = new Array();
  var index =  4 ; // 0,1,2,3 taken by root,P,F,C  respectively.
  
- var COUNTINPAGE = 1000;
+ var COUNTINPAGE = 50;
  
 </script>
 	
@@ -238,6 +238,63 @@
 	?>
 	
 	<?php
+	
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Loading the regulon-ProbeID data...</center></div>';
+			
+		$dbhost = 'metnetdb.org:3306/';
+		$dbname = 'achvas';
+		$dbuser = 'guest';
+		$dbpass = '';
+		$conn = mysql_connect($dbhost, $dbuser, $dbpass) or die                      ('Error connecting to mysql');
+
+		mysql_select_db($dbname);
+		
+		$query =  'SELECT RegulonID,ProbeID,Symbol FROM `aravindh`.`genes` where RegulonID!=0;';
+		$result = mysql_query($query);
+		if (!$result) 
+		{
+			die('Invalid query: ' . mysql_error());
+		}
+		else
+		{
+			while ($row = mysql_fetch_array($result, MYSQL_NUM)) 
+			{
+				$RegIDProbes['' . $row[0]][] =''.$row[1];
+				$ProbeSymbol['' . $row[1]]   =''.$row[2];
+			}
+		}
+			
+		mysql_close($conn);
+		
+	?>
+	
+	<?php
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing Regulon-ProbeID data...</center></div>';
+		
+		echo '<script>var RegulonProbeMap = new Array();';
+		echo 'var ProbeSymbolMap = new Array();';
+		
+		foreach ($RegIDProbes as $key => $value)
+		{
+			foreach ($value as $val)
+			{
+				echo 'if(RegulonProbeMap["RegID'.$key.'"] == undefined)';
+				echo ' RegulonProbeMap["RegID'.$key.'"] = new Array(); ';
+				echo 'RegulonProbeMap["RegID'.$key.'"].push("'.$val.'");';
+				
+			}
+		}
+		
+		foreach ($ProbeSymbol as $key => $value)
+		{
+			echo 'ProbeSymbolMap["'.$key.'"] = "'.$value.'";';
+		}
+		unset($RegIDProbes);
+		
+		echo '</script>'; 
+	?>
+	
+	<?php
 		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Initializing...</center></div>';
 		
 		echo '<script>var neighborsList = new Array();</script>';
@@ -298,30 +355,110 @@
 		unset($conn);
 	?>
 	
+	
 	<?php
-		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Initializing part 2...</center></div>';
+	
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Loading Gene-Ontology Terms description</center></div>';
+			
+		$dbhost = 'localhost:3306/';
+		$dbname = 'test';
+		$dbuser = '';
+		$dbpass = '';
+		$conn = mysql_connect($dbhost, $dbuser, $dbpass) or die                      ('Error connecting to mysql');
+
+		$entireListOfGOs = array();
+		//$entireListOfGOsHash = array();
+		$GosNames = array();
+		$GosDescription = array();
+		
+		mysql_select_db($dbname);
+	
+		$query =  'SELECT id,name,description FROM `test`.`go_description_final`;';
+		
+		$result = mysql_query($query);
+		if (!$result) 
+		{
+			die('Invalid query: ' . mysql_error());
+		}
+		else
+		{
+			//$counter = -1;
+			while ($row = mysql_fetch_array($result, MYSQL_NUM)) 
+			{
+				//$counter++;
+				$entireListOfGOs[] = ''.$row[0];
+				//$entireListOfGOsHash["".$row[0].""] = $counter;
+				$GosNames[] = ''.$row[1];
+				$GosDescription[] = ''. substr(''.$row[2],0,-2);
+			}
+		}
+			
+		mysql_close($conn);
+		
+		unset($row);
+		unset($query);
+		unset($result);
+		unset($dbhost);
+		unset($dbname);
+		unset($dbuser);
+		unset($dbpass);
+		unset($conn);
+	?>
+	
+	<?php
+	
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing Gene-Ontology Terms Description variables</center></div>';
+		 
+		echo '<script>var elementsDesc = new Array();';
+		echo 'var entireListOfGOs = new Array();';
+		echo 'var entireListOfGOsHash = new Array();</script>';
+		
+		for($i=0;$i<1;$i++) //count($entireListOfGOs);$i++)
+		{
+			echo '<script>var obj = new Object;';
+			echo 'var tempString = "" + "'.  $GosNames[$i]  .'"+"";';
+			echo 'obj.name = tempString;';
+			echo 'var tempStringDes = ""+ "'.  $GosDescription[$i]  .'"+"";';
+			echo 'obj.description = tempStringDes;';
+			echo 'elementsDesc.push(obj);';
+			//echo 'entireListOfGOs.push("'.  $entireListOfGOs[$i]  .'");';
+			echo 'var tempStringH = ""+ "'.  $entireListOfGOs[$i]  .'"+"";';
+			echo 'entireListOfGOsHash[tempStringH] = '. $i .';</script>';
+			if($i && $i % 5000 == 0)
+				echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing Gene-Ontology Terms Description variables:   '. floor($i/count($entireListOfGOs)*100) .'%</center></div>';
+		}
+		unset($GosNames);
+		unset($GosDescription);
+		unset($entireListOfGOs);
+	?>
+	
+	<?php
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing GO variables </center></div>';
 		
 		echo '<script>var elementstemp = new Array();</script>';
 		echo '<script>var elementshash = new Array();</script>';
 		echo '<script>var childrentemp = new Array();</script>';
 		
+		
 		for($i=0;$i<count($listOfGOs);$i++)
 		{
 			echo '<script>elementstemp.push("' .$listOfGOs[$i]. '");</script>';
 			echo '<script>elementshash["' .$listOfGOs[$i]. '"] = '.$i.';</script>';
+			//echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing GO variables : '.$i.'/'.count($listOfGOs).'</center></div>';
 		}
+		
+		echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing children of GO terms</center></div>';
 		
 		for($i=0;$i<count($GosChildren);$i++)
 		{
 			echo '<script>var tempNeigh = new Array();</script>';
 			echo '<script>tempNeigh.push("' .$GosChildren[$i]. '");</script>';
 			echo '<script>childrentemp.push(tempNeigh);</script>';
+			//echo '<div style="background-color:gray;position:absolute;top:48%;left:0%;width:100%;color:white;"><center>Pushing children of GO terms: '.$i.'/'.count($GosChildren).'</center></div>';
 		}
 		
 		unset($listOfGOs);
 		unset($GosChildren);
-		
-		
 	?>
 	
 <script>
@@ -357,7 +494,7 @@ function userDefinedHighlightSelectedNodes()
 	for(var i=0;i<selectedNodes.length;i++)
 	{
 		debText+=selectedNodes[i]+" ";
-		drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[selectedNodes[i]].X,theElements[selectedNodes[i]].Y,"#FF0000");
+		drawCircle(canvas,RADIUS_OF_CIRCLES,theElements[selectedNodes[i]].X,theElements[selectedNodes[i]].Y,"#FF0000",theElements[selectedNodes[i]].name);
 		
 		var newoptn = document.createElement("OPTION");
 		newoptn.text = theElements[selectedNodes[i]].name;
@@ -396,8 +533,11 @@ function createTheGraphContents()
  
 function init()
 {
+	//alert("name: "+elementsDesc[0].name + ",Des:"+elementsDesc[0].description);
+	//alert(RegulonProbeMap["RegID1"].length);
 	createTheGraphContents();
 	populateSelectBox();
+	labelCanvas_Top = document.getElementById("MyCanvas3");
 	canvas2 = document.getElementById("MyCanvas2");
 	canvas2.addEventListener("mousedown", handleMouseDown);
 	canvas2.addEventListener("mouseup", handleMouseUp);
@@ -465,14 +605,26 @@ function initializeArrays()
 	
 	
 	// inserting root,P,F,C 
-	elements_I = [{"name":"root","description":"theRoot","index":-1} , {"name":elementstemp[PIndex],"description":"","index":PIndex}, {"name":elementstemp[FIndex],"description":"","index":FIndex} , {"name":elementstemp[CIndex],"description":"","index":CIndex} ];
+	
+	// proper_mode
+	//elements_I = [{"name":"root","description":"The root of the Gene Ontology Hierarchy","alias":"theRoot","index":-1,"level":-1} , {"name":elementstemp[PIndex],"description":elementsDesc[entireListOfGOsHash[P]].description,"alias":""+elementsDesc[entireListOfGOsHash[P]].name+"(P)","index":PIndex,"level":0}, {"name":elementstemp[FIndex],"description":elementsDesc[entireListOfGOsHash[F]].description,"alias":""+elementsDesc[entireListOfGOsHash[F]].name+"(F)","index":FIndex,"level":0} , {"name":elementstemp[CIndex],"description":elementsDesc[entireListOfGOsHash[C]].description,"alias":""+elementsDesc[entireListOfGOsHash[C]].name+"(C)","index":CIndex,"level":0} ];
+	
+	// dev mode
+	elements_I = [{"name":"root","index":-1,"description":"The root of the Gene Ontology Hierarchy"} , {"name":elementstemp[PIndex],"index":PIndex}, {"name":elementstemp[FIndex],"index":FIndex,"level":0} , {"name":elementstemp[CIndex],"index":CIndex,"level":0} ];
+	
 	childrenList_I = [[1,2,3],[],[],[]];
 	
+	//var debTA  = document.getElementById("LogTA");
+	//debTA.value = debTA.value + "\n------------ P -----------\n";
 	
 	fillChildren(PIndex,1,0);	// (index of element in elementstemp and childrenList_H_2, index in childrenList_H )
-	fillChildren(FIndex,2,0);
-	fillChildren(CIndex,3,0);
 	
+	//debTA.value = debTA.value + "\n------------ F -----------\n";
+	fillChildren(FIndex,2,0);
+	
+	//debTA.value = debTA.value + "\n------------ C -----------\n";
+	fillChildren(CIndex,3,0);
+
 	elements_In_Children = [];
 	childrenList_H_2 = [];
 	
@@ -647,6 +799,42 @@ function select()
 	
 }
 
+function select_GO()
+{
+	var tf = document.getElementById('GOTerm');
+	var aList = document.getElementById("allList_GO");
+	var sList = document.getElementById("selectedList_GO");
+	var pageno = document.getElementById("pageno");
+	
+	
+	for(var i=0;i<sList.options.length;i++)	// check if already selected
+	{
+		if(sList.options[i].text == tf.value) return;
+	}
+	
+	for(var i=0;i<elements_I.length;i++)
+	{
+		
+		if(elements_I[i].name == tf.value)
+		{
+			page = Math.ceil(i/COUNTINPAGE);
+		
+			if(i%COUNTINPAGE == 0)	page++;
+		
+			if(pageno.options[pageno.selectedIndex].text == page)
+				aList.options[i%COUNTINPAGE].selected = true;
+						
+			var newoptn = document.createElement("OPTION");
+			newoptn.text = tf.value;
+			newoptn.ind = i;
+			sList.options.add(newoptn);	
+			selectedNodes_I.push(i);
+			highlightChildren_I(i);
+			highlightSelectedNodes_I();
+		}
+	}
+}
+
 function fullscreen1()
 {
 		var new_height;
@@ -816,10 +1004,13 @@ function showDetails_GO()
 		
 	for(var i=0;i<theSelectedList.options.length;i++)
 	{
-		theInnerHTML+=  "</br><b> GO Term Name : " 		+ elements_I[theSelectedList.options[i].ind].name 			+  "</b></br></br>";
+		theInnerHTML+=  "</br><b> GO Term ID : " 		+ elements_I[theSelectedList.options[i].ind].name 			+  "</b></br></br>";
 		
 		theInnerHTML+= 	"<table width=\"100%\" border = 1>"+
 						"<tr style=\" background-color:#AAAAAA\"><th>Property</th><th>Value</th></tr>";
+						
+		theInnerHTML+=  "<tr><td>Name</td><td>"  				+ elements_I[theSelectedList.options[i].ind].alias 	+  "</td></tr>";
+		theInnerHTML+=  "<tr><td>Depth</td><td>"  				+ elements_I[theSelectedList.options[i].ind].depth 	+  "</td></tr>";
 		theInnerHTML+=  "<tr><td>Description</td><td>"  		+ elements_I[theSelectedList.options[i].ind].description 	+  "</td></tr>";
 		
 		theInnerHTML += "</table></br><hr>";
@@ -950,17 +1141,18 @@ function toggleLegends()
 	<div>
 		<div>	
 			<div id="omw_scrollpane">
-				<canvas id="MyCanvas2" width="1200px" height="1200px"  style="z-index: 3; position:absolute; left:0px; top:0px;" onmousemove="handleMouseOver(event)"></canvas>	    
+				<canvas id="MyCanvas3" width="1200px" height="1200px"  style="z-index: 3; position:absolute; left:0px; top:0px;"></canvas>	    
+				<canvas id="MyCanvas2" width="1200px" height="1200px"  style="z-index: 4; position:absolute; left:0px; top:0px;" onmousemove="handleMouseOver(event)"></canvas>	    
 				<canvas id="MyCanvas1" width="1200px" height="1200px"  style="z-index: 2; position:absolute; left:0px; top:0px;"></canvas>	    
 				<canvas id="myCanvas" width="1200px" height="1200px"   style="z-index: 1; position:absolute; left:0px; top:0px;" name="superCanvas"  >ur browser doesnt support canvas element.. do something!Now!</canvas>
 			</div>
 			
 			<div id="zoom_panel1">
-				<button type="submit" id="zoomin"     style="z-index: 4;position:absolute;top:10px;left:10px;height:30px;"><img src = "zoom_in.png" width = "20px" height = "20px"></button>
-				<button type="submit" id="zoomout"    style="z-index: 4;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
-				<button type="submit" id="fullScreen" style="z-index: 4;position:absolute;top:10px;left:90px;height:30px;" onclick="fullscreen1();"><img src="fullscreen.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="zoomin"     style="z-index: 5;position:absolute;top:10px;left:10px;height:30px;"><img src = "zoom_in.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="zoomout"    style="z-index: 5;position:absolute;top:10px;left:50px;height:30px;"><img src="zoom_out.png" width = "20px" height = "20px"></button>
+				<button type="submit" id="fullScreen" style="z-index: 5;position:absolute;top:10px;left:90px;height:30px;" onclick="fullscreen1();"><img src="fullscreen.png" width = "20px" height = "20px"></button>
 				
-				<div id = "level" style="z-index: 2;position:absolute;top:50px;left:10px;width:100px;background:white"> Regulon Level</div>
+				<div id = "level" style="z-index: 5;position:absolute;top:50px;left:10px;width:100px;background:white"> Regulon Level</div>
 				
 			</div>
 		</div>
@@ -1044,11 +1236,11 @@ function toggleLegends()
 			
 			<div id="GOTermData" style="padding: 3px;">
 			
-				GO Term Enter: <input type = "textfield" value = "" id = "regID">
+				GO Term Enter: <input type = "textfield" value = "" id = "GOTerm">
 				<br>
-				<button type="submit" onclick = "select2();"> Select </button>
+				<button type="submit" onclick = "select_GO();"> Select </button>
 				<br><br>
-				
+	
 				
 				<table border= 0>
 				<tr>
@@ -1124,7 +1316,7 @@ function toggleLegends()
 				<table width=110 cellspacing=0 cellpadding=0 border=1>
 
 				  <tr>
-					<td id="item1" bgcolor="#FFFFFF" width="110" height="16" onMouseOver="this.style.backgroundColor='#EFEFEF'" onMouseOut="this.style.backgroundColor='#FFFFFF'">  <a href="#" onclick="document.getElementById('menudiv').style.display='none';">View Genes</a></td>
+					<td id="item1" bgcolor="#FFFFFF" width="110" height="16" onMouseOver="this.style.backgroundColor='#EFEFEF'" onMouseOut="this.style.backgroundColor='#FFFFFF'">  <a href="#" onclick="viewGenes();document.getElementById('menudiv').style.display='none';">View Genes</a></td>
 				  </tr>
 				  
 				  <tr>
@@ -1136,7 +1328,11 @@ function toggleLegends()
 			  </td></tr>
 			</table>
 	</div>
-	<!-- -->
+	
+	
+	
+	<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+	<textarea id="LogTA" cols="50" rows="10" name="LogTA"></textarea>-->
 	
 	
 	

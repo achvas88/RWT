@@ -19,7 +19,7 @@
  // holds the elements_I present in each level
  var levelElements_I = new Array();
  
- var levelElements_I_orig = new Array();
+ //var levelElements_I_orig = new Array();
  
  // adjacencyList is a 2D array . 
  // Rows indicate the different elements_I
@@ -111,7 +111,7 @@
 	
 	drawChart_I();
 	
-	levelElements_I_orig = levelElements_I;
+	//levelElements_I_orig = levelElements_I;
 	
 	canvas2_I.oncontextmenu = function()
 	{
@@ -235,9 +235,21 @@
  }
 
 
- function drawElement(left,top,width,height)
+ function drawElement(index,left,top,width,height)
  {
+	ctx = canvas_I.getContext("2d");
+	
 	drawRect(canvas_I,left,top,width,height,"#33FF00","black");
+	if(width>70)
+	{
+		drawRect(canvas_I,(left+width/2)-35,top+height/2-10,70,20,"#eee","black");
+		
+		ctx.fillStyle    = '#000';
+		ctx.font         = 'italic 10px';
+		ctx.textBaseline = 'top';
+		
+		ctx.fillText(elements_I[index].name,(left+width/2)-30,top+height/2-5);
+	}
  }
  
  function drawChildrenOfElement(index,left,top,bottom,right,depth)
@@ -308,7 +320,7 @@
 	var width = right-left;
 	var height = bottom-top;
 	
-	drawElement(left,top,width,height);
+	drawElement(index,left,top,width,height);
 	drawChildrenOfElement(index,left,top,bottom,right,depth);
  }
 
@@ -413,6 +425,17 @@ function determineLevel_I(y)
 	var height = LEVEL_HEIGHT;
 	
 	drawRect(canvas_I,x,y,width,height,"#33FF00","black");
+	
+	if(width>70)
+	{
+		drawRect(canvas_I,(x+width/2)-35,y+height/2-10,70,20,"#eee","black");
+		
+		ctx.fillStyle    = '#000';
+		ctx.font         = 'italic 10px';
+		ctx.textBaseline = 'top';
+		
+		ctx.fillText(elements_I[index].name,(x+width/2)-30,y+height/2-5);
+	}
  }
 
  function highlightChildren_I(index)
@@ -437,5 +460,16 @@ function determineLevel_I(y)
 	var height = LEVEL_HEIGHT;
 	
 	drawRect(canvas_I,x,y,width,height,"#FFFF00","blue");
+	
+	if(width>70)
+	{
+		drawRect(canvas_I,(x+width/2)-35,y+height/2-10,70,20,"#eee","black");
+		
+		ctx.fillStyle    = '#000';
+		ctx.font         = 'italic 10px';
+		ctx.textBaseline = 'top';
+		
+		ctx.fillText(elements_I[index].name,(x+width/2)-30,y+height/2-5);
+	}
  } 
   
