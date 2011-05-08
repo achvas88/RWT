@@ -430,6 +430,8 @@ function determineLevel_I(y)
 	{
 		drawRect(canvas_I,(x+width/2)-35,y+height/2-10,70,20,"#eee","black");
 		
+		var ctx = canvas_I.getContext("2d");
+		
 		ctx.fillStyle    = '#000';
 		ctx.font         = 'italic 10px';
 		ctx.textBaseline = 'top';
@@ -463,6 +465,8 @@ function determineLevel_I(y)
 	
 	if(width>70)
 	{
+		var ctx = canvas_I.getContext("2d");
+		
 		drawRect(canvas_I,(x+width/2)-35,y+height/2-10,70,20,"#eee","black");
 		
 		ctx.fillStyle    = '#000';

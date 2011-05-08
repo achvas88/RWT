@@ -310,6 +310,9 @@ function highlightSelectedNodes_I()
 		
 		if(width>70)
 		{
+			
+			var ctx = canvas_I.getContext("2d");
+			
 			drawRect(canvas_I,(left+width/2)-35,top+height/2-10,70,20,"#eee","black");
 			
 			ctx.fillStyle    = '#000';

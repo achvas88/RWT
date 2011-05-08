@@ -52,6 +52,8 @@ function handleSelection_I(startX,startY,endX,endY)
 			{
 				drawRect(canvas_I,(left+width/2)-35,top+height/2-10,70,20,"#eee","black");
 				
+				var ctx = canvas_I.getContext("2d");
+				
 				ctx.fillStyle    = '#000';
 				ctx.font         = 'italic 10px';
 				ctx.textBaseline = 'top';
